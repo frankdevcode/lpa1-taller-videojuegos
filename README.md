@@ -1,3 +1,83 @@
+# Aventura Fantástica - Videojuego de Exploración y Combate
+
+Un videojuego interactivo basado en exploración y combate, diseñado para ejecutarse en el navegador. Desarrollado con Flask y Phaser.js.
+
+## Características
+
+- Mundo de fantasía con personajes tipo muñecos animados
+- Mecánicas de combate contra enemigos
+- Recolección de objetos y tesoros
+- Trampas explosivas y obstáculos
+- Diferentes tipos de enemigos (terrestres, voladores)
+- Efectos visuales como explosiones y hechizos mágicos
+- Escenarios con atmósfera mística (bosques, mazmorras, zonas abiertas)
+- Sistema de mejora de personajes
+
+## Requisitos
+
+- Python 3.7+
+- Flask
+- Navegador moderno con soporte para HTML5 y WebGL
+
+## Instalación
+
+1. Clona este repositorio:
+   ```
+   git clone https://github.com/tu-usuario/aventura-fantastica.git
+   cd aventura-fantastica
+   ```
+
+2. Instala las dependencias:
+   ```
+   pip install -r requirements.txt
+   ```
+
+3. Ejecuta la aplicación:
+   ```
+   python main.py
+   ```
+
+4. Abre tu navegador en `http://localhost:5000`
+
+## Estructura del Proyecto
+
+```
+.
+├── main.py                      # Aplicación Flask principal
+├── requirements.txt             # Dependencias
+├── static/                      # Archivos estáticos 
+│   ├── assets/                  # Recursos del juego
+│   │   ├── images/              # Imágenes y sprites
+│   │   │   ├── backgrounds/     # Fondos del juego
+│   │   │   ├── characters/      # Personajes
+│   │   │   ├── enemies/         # Enemigos
+│   │   │   ├── objects/         # Objetos coleccionables
+│   │   │   ├── effects/         # Efectos visuales
+│   │   │   └── ui/              # Elementos de interfaz
+│   │   └── sounds/              # Efectos de sonido y música
+│   ├── css/                     # Estilos CSS
+│   └── js/                      # Scripts JavaScript
+│       ├── scenes/              # Escenas del juego
+│       ├── config.js            # Configuración de Phaser
+│       └── main.js              # Script principal
+└── templates/                   # Plantillas HTML
+    └── index.html               # Página principal del juego
+```
+
+## Cómo Jugar
+
+- **Teclas de Flecha**: Moverse (izquierda/derecha) y saltar (arriba)
+- **Espacio**: Atacar
+- **ESC**: Pausar el juego
+
+## Créditos
+
+Desarrollado como parte del proyecto de taller de videojuegos.
+
+## Licencia
+
+MIT
+
 # Taller Videojuegos
 
 ![commits](https://badgen.net/github/commits/UR-CC/lpa1-taller-videojuegos?icon=github) 
