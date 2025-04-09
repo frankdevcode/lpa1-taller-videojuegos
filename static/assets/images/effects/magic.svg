@@ -1,0 +1,111 @@
+<svg width="512" height="64" xmlns="http://www.w3.org/2000/svg">
+  <!-- 8 frames de efecto mágico, cada uno de 64x64 píxeles -->
+  
+  <!-- Frame 1: Inicio del efecto mágico -->
+  <g transform="translate(0, 0)">
+    <circle cx="32" cy="32" r="6" fill="#8A2BE2" opacity="0.6"/>
+    <circle cx="32" cy="32" r="3" fill="#9400D3" opacity="0.8"/>
+  </g>
+  
+  <!-- Frame 2: Auras iniciales -->
+  <g transform="translate(64, 0)">
+    <circle cx="32" cy="32" r="10" fill="#8A2BE2" opacity="0.5"/>
+    <circle cx="32" cy="32" r="6" fill="#9400D3" opacity="0.7"/>
+    <circle cx="32" cy="32" r="3" fill="#9932CC" opacity="0.9"/>
+    
+    <!-- Pequeñas partículas -->
+    <circle cx="37" cy="27" r="1" fill="#E0AAFF" opacity="0.8"/>
+    <circle cx="27" cy="37" r="1" fill="#E0AAFF" opacity="0.8"/>
+  </g>
+  
+  <!-- Frame 3: Expansión del efecto -->
+  <g transform="translate(128, 0)">
+    <circle cx="32" cy="32" r="15" fill="#8A2BE2" opacity="0.4"/>
+    <circle cx="32" cy="32" r="10" fill="#9400D3" opacity="0.6"/>
+    <circle cx="32" cy="32" r="5" fill="#9932CC" opacity="0.8"/>
+    
+    <!-- Pequeñas estrellas -->
+    <path d="M40,26 L42,30 L46,30 L43,33 L44,37 L40,35 L36,37 L37,33 L34,30 L38,30 Z" fill="#E0AAFF" opacity="0.7"/>
+    <path d="M24,38 L25,40 L27,40 L25,41 L26,43 L24,42 L22,43 L23,41 L21,40 L23,40 Z" fill="#E0AAFF" opacity="0.7"/>
+  </g>
+  
+  <!-- Frame 4: Rayos centrales -->
+  <g transform="translate(192, 0)">
+    <circle cx="32" cy="32" r="18" fill="#8A2BE2" opacity="0.4"/>
+    <circle cx="32" cy="32" r="12" fill="#9400D3" opacity="0.5"/>
+    <circle cx="32" cy="32" r="6" fill="#9932CC" opacity="0.7"/>
+    
+    <!-- Rayos que emanan del centro -->
+    <line x1="32" y1="32" x2="32" y2="10" stroke="#E0AAFF" stroke-width="1" opacity="0.8"/>
+    <line x1="32" y1="32" x2="50" y2="20" stroke="#E0AAFF" stroke-width="1" opacity="0.8"/>
+    <line x1="32" y1="32" x2="54" y2="32" stroke="#E0AAFF" stroke-width="1" opacity="0.8"/>
+    <line x1="32" y1="32" x2="50" y2="44" stroke="#E0AAFF" stroke-width="1" opacity="0.8"/>
+    <line x1="32" y1="32" x2="32" y2="54" stroke="#E0AAFF" stroke-width="1" opacity="0.8"/>
+    <line x1="32" y1="32" x2="14" y2="44" stroke="#E0AAFF" stroke-width="1" opacity="0.8"/>
+    <line x1="32" y1="32" x2="10" y2="32" stroke="#E0AAFF" stroke-width="1" opacity="0.8"/>
+    <line x1="32" y1="32" x2="14" y2="20" stroke="#E0AAFF" stroke-width="1" opacity="0.8"/>
+  </g>
+  
+  <!-- Frame 5: Efecto máximo -->
+  <g transform="translate(256, 0)">
+    <circle cx="32" cy="32" r="20" fill="#8A2BE2" opacity="0.3"/>
+    <circle cx="32" cy="32" r="14" fill="#9400D3" opacity="0.4"/>
+    <circle cx="32" cy="32" r="8" fill="#9932CC" opacity="0.6"/>
+    
+    <!-- Rayos fuertes -->
+    <line x1="32" y1="32" x2="32" y2="5" stroke="#E0AAFF" stroke-width="2" opacity="0.7"/>
+    <line x1="32" y1="32" x2="55" y2="15" stroke="#E0AAFF" stroke-width="2" opacity="0.7"/>
+    <line x1="32" y1="32" x2="59" y2="32" stroke="#E0AAFF" stroke-width="2" opacity="0.7"/>
+    <line x1="32" y1="32" x2="55" y2="49" stroke="#E0AAFF" stroke-width="2" opacity="0.7"/>
+    <line x1="32" y1="32" x2="32" y2="59" stroke="#E0AAFF" stroke-width="2" opacity="0.7"/>
+    <line x1="32" y1="32" x2="9" y2="49" stroke="#E0AAFF" stroke-width="2" opacity="0.7"/>
+    <line x1="32" y1="32" x2="5" y2="32" stroke="#E0AAFF" stroke-width="2" opacity="0.7"/>
+    <line x1="32" y1="32" x2="9" y2="15" stroke="#E0AAFF" stroke-width="2" opacity="0.7"/>
+    
+    <!-- Estrellas alrededor -->
+    <path d="M50,32 L52,36 L56,36 L53,39 L54,43 L50,41 L46,43 L47,39 L44,36 L48,36 Z" fill="#E0AAFF" opacity="0.6"/>
+    <path d="M14,32 L16,36 L20,36 L17,39 L18,43 L14,41 L10,43 L11,39 L8,36 L12,36 Z" fill="#E0AAFF" opacity="0.6"/>
+    <path d="M32,14 L34,18 L38,18 L35,21 L36,25 L32,23 L28,25 L29,21 L26,18 L30,18 Z" fill="#E0AAFF" opacity="0.6"/>
+    <path d="M32,50 L34,54 L38,54 L35,57 L36,61 L32,59 L28,61 L29,57 L26,54 L30,54 Z" fill="#E0AAFF" opacity="0.6"/>
+  </g>
+  
+  <!-- Frame 6: Efecto disipándose -->
+  <g transform="translate(320, 0)">
+    <circle cx="32" cy="32" r="22" fill="#8A2BE2" opacity="0.2"/>
+    <circle cx="32" cy="32" r="16" fill="#9400D3" opacity="0.3"/>
+    <circle cx="32" cy="32" r="10" fill="#9932CC" opacity="0.4"/>
+    
+    <!-- Rayos debilitándose -->
+    <line x1="32" y1="32" x2="32" y2="10" stroke="#E0AAFF" stroke-width="1" opacity="0.5"/>
+    <line x1="32" y1="32" x2="50" y2="20" stroke="#E0AAFF" stroke-width="1" opacity="0.5"/>
+    <line x1="32" y1="32" x2="54" y2="32" stroke="#E0AAFF" stroke-width="1" opacity="0.5"/>
+    <line x1="32" y1="32" x2="50" y2="44" stroke="#E0AAFF" stroke-width="1" opacity="0.5"/>
+    <line x1="32" y1="32" x2="32" y2="54" stroke="#E0AAFF" stroke-width="1" opacity="0.5"/>
+    <line x1="32" y1="32" x2="14" y2="44" stroke="#E0AAFF" stroke-width="1" opacity="0.5"/>
+    <line x1="32" y1="32" x2="10" y2="32" stroke="#E0AAFF" stroke-width="1" opacity="0.5"/>
+    <line x1="32" y1="32" x2="14" y2="20" stroke="#E0AAFF" stroke-width="1" opacity="0.5"/>
+  </g>
+  
+  <!-- Frame 7: Efecto débil -->
+  <g transform="translate(384, 0)">
+    <circle cx="32" cy="32" r="16" fill="#8A2BE2" opacity="0.2"/>
+    <circle cx="32" cy="32" r="10" fill="#9400D3" opacity="0.2"/>
+    <circle cx="32" cy="32" r="5" fill="#9932CC" opacity="0.3"/>
+    
+    <!-- Algunas pequeñas partículas finales -->
+    <circle cx="38" cy="26" r="1" fill="#E0AAFF" opacity="0.4"/>
+    <circle cx="26" cy="38" r="1" fill="#E0AAFF" opacity="0.4"/>
+    <circle cx="38" cy="38" r="1" fill="#E0AAFF" opacity="0.4"/>
+    <circle cx="26" cy="26" r="1" fill="#E0AAFF" opacity="0.4"/>
+  </g>
+  
+  <!-- Frame 8: Fin del efecto -->
+  <g transform="translate(448, 0)">
+    <circle cx="32" cy="32" r="12" fill="#8A2BE2" opacity="0.1"/>
+    <circle cx="32" cy="32" r="6" fill="#9400D3" opacity="0.1"/>
+    <circle cx="32" cy="32" r="3" fill="#9932CC" opacity="0.2"/>
+    
+    <!-- Último resplandor -->
+    <circle cx="32" cy="32" r="18" fill="#E0AAFF" opacity="0.05"/>
+  </g>
+</svg> 

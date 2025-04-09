@@ -1,0 +1,27 @@
+<svg width="64" height="64" xmlns="http://www.w3.org/2000/svg">
+  <!-- Bomba -->
+  
+  <!-- Cuerpo de la bomba -->
+  <circle cx="32" cy="38" r="18" fill="#111111" stroke="#000000" stroke-width="2"/>
+  
+  <!-- Brillo de la bomba -->
+  <ellipse cx="26" cy="32" rx="6" ry="8" fill="#444444" opacity="0.5"/>
+  
+  <!-- Mecha -->
+  <path d="M32,20 Q38,15 42,18" stroke="#7D5834" stroke-width="3" stroke-linecap="round" fill="none"/>
+  
+  <!-- Punta encendida de la mecha -->
+  <circle cx="42" cy="18" r="3" fill="#FFBB00"/>
+  <circle cx="42" cy="18" r="2" fill="#FF0000"/>
+  
+  <!-- Destello -->
+  <circle cx="42" cy="18" r="4" fill="#FFFF00" opacity="0.3">
+    <animate attributeName="opacity" values="0.3;0.8;0.3" dur="1s" repeatCount="indefinite"/>
+  </circle>
+  
+  <!-- Remaches decorativos -->
+  <circle cx="26" cy="40" r="2" fill="#333333" stroke="#000000" stroke-width="0.5"/>
+  <circle cx="38" cy="40" r="2" fill="#333333" stroke="#000000" stroke-width="0.5"/>
+  <circle cx="32" cy="48" r="2" fill="#333333" stroke="#000000" stroke-width="0.5"/>
+  <circle cx="32" cy="32" r="2" fill="#333333" stroke="#000000" stroke-width="0.5"/>
+</svg> 

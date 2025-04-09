@@ -1,0 +1,33 @@
+<svg width="64" height="64" xmlns="http://www.w3.org/2000/svg">
+  <!-- Cofre del tesoro -->
+  <!-- Base del cofre -->
+  <rect x="10" y="30" width="44" height="25" fill="#8B4513" stroke="#5D3012" stroke-width="2"/>
+  
+  <!-- Tapa del cofre -->
+  <path d="M8,30 L32,20 L56,30" fill="none" stroke="#5D3012" stroke-width="2"/>
+  <path d="M10,30 L32,22 L54,30" fill="#8B4513" stroke="#5D3012" stroke-width="1"/>
+  
+  <!-- Detalles de la tapa -->
+  <rect x="30" y="22" width="4" height="1" fill="#FFD700"/>
+  <rect x="28" y="23" width="8" height="1" fill="#FFD700"/>
+  <rect x="26" y="24" width="12" height="1" fill="#FFD700"/>
+  <rect x="24" y="25" width="16" height="1" fill="#FFD700"/>
+  <rect x="22" y="26" width="20" height="1" fill="#FFD700"/>
+  <rect x="20" y="27" width="24" height="1" fill="#FFD700"/>
+  <rect x="18" y="28" width="28" height="1" fill="#FFD700"/>
+  <rect x="16" y="29" width="32" height="1" fill="#FFD700"/>
+  
+  <!-- Detalles metálicos -->
+  <rect x="8" y="30" width="48" height="2" fill="#DAA520"/>
+  <rect x="8" y="53" width="48" height="2" fill="#DAA520"/>
+  <rect x="8" y="30" width="2" height="25" fill="#DAA520"/>
+  <rect x="54" y="30" width="2" height="25" fill="#DAA520"/>
+  
+  <!-- Cerradura -->
+  <rect x="30" y="40" width="4" height="6" fill="#DAA520" stroke="#A67C00" stroke-width="1"/>
+  <circle cx="32" cy="42" r="1" fill="#A67C00"/>
+  
+  <!-- Brillo -->
+  <ellipse cx="20" cy="35" rx="3" ry="2" fill="#FFFFFF" opacity="0.3"/>
+  <ellipse cx="40" cy="45" rx="4" ry="3" fill="#FFFFFF" opacity="0.2"/>
+</svg> 

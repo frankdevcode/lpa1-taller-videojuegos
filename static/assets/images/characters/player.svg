@@ -1,0 +1,123 @@
+<svg width="384" height="64" xmlns="http://www.w3.org/2000/svg">
+  <!-- 6 frames, cada uno de 64x64 píxeles -->
+  
+  <!-- Frame 1: Idle 1 -->
+  <g transform="translate(0, 0)">
+    <!-- Cuerpo principal -->
+    <circle cx="32" cy="25" r="15" fill="#3498db"/>
+    <!-- Cabeza -->
+    <circle cx="32" cy="15" r="10" fill="#f5d6ba"/>
+    <!-- Ojos -->
+    <circle cx="29" cy="13" r="2" fill="#2c3e50"/>
+    <circle cx="35" cy="13" r="2" fill="#2c3e50"/>
+    <!-- Boca -->
+    <path d="M30,19 Q32,21 34,19" stroke="#2c3e50" stroke-width="1" fill="none"/>
+    <!-- Brazos -->
+    <line x1="20" y1="25" x2="15" y2="35" stroke="#3498db" stroke-width="5" stroke-linecap="round"/>
+    <line x1="44" y1="25" x2="49" y2="35" stroke="#3498db" stroke-width="5" stroke-linecap="round"/>
+    <!-- Piernas -->
+    <line x1="27" y1="40" x2="25" y2="55" stroke="#2c3e50" stroke-width="5" stroke-linecap="round"/>
+    <line x1="37" y1="40" x2="39" y2="55" stroke="#2c3e50" stroke-width="5" stroke-linecap="round"/>
+  </g>
+  
+  <!-- Frame 2: Idle 2 -->
+  <g transform="translate(64, 0)">
+    <!-- Cuerpo principal -->
+    <circle cx="32" cy="27" r="15" fill="#3498db"/>
+    <!-- Cabeza -->
+    <circle cx="32" cy="17" r="10" fill="#f5d6ba"/>
+    <!-- Ojos -->
+    <circle cx="29" cy="15" r="2" fill="#2c3e50"/>
+    <circle cx="35" cy="15" r="2" fill="#2c3e50"/>
+    <!-- Boca -->
+    <path d="M30,21 Q32,23 34,21" stroke="#2c3e50" stroke-width="1" fill="none"/>
+    <!-- Brazos -->
+    <line x1="20" y1="27" x2="15" y2="37" stroke="#3498db" stroke-width="5" stroke-linecap="round"/>
+    <line x1="44" y1="27" x2="49" y2="37" stroke="#3498db" stroke-width="5" stroke-linecap="round"/>
+    <!-- Piernas -->
+    <line x1="27" y1="42" x2="25" y2="57" stroke="#2c3e50" stroke-width="5" stroke-linecap="round"/>
+    <line x1="37" y1="42" x2="39" y2="57" stroke="#2c3e50" stroke-width="5" stroke-linecap="round"/>
+  </g>
+  
+  <!-- Frame 3: Walk 1 -->
+  <g transform="translate(128, 0)">
+    <!-- Cuerpo principal -->
+    <circle cx="32" cy="25" r="15" fill="#3498db"/>
+    <!-- Cabeza -->
+    <circle cx="32" cy="15" r="10" fill="#f5d6ba"/>
+    <!-- Ojos -->
+    <circle cx="29" cy="13" r="2" fill="#2c3e50"/>
+    <circle cx="35" cy="13" r="2" fill="#2c3e50"/>
+    <!-- Boca -->
+    <path d="M30,19 Q32,21 34,19" stroke="#2c3e50" stroke-width="1" fill="none"/>
+    <!-- Brazos -->
+    <line x1="20" y1="25" x2="12" y2="30" stroke="#3498db" stroke-width="5" stroke-linecap="round"/>
+    <line x1="44" y1="25" x2="52" y2="30" stroke="#3498db" stroke-width="5" stroke-linecap="round"/>
+    <!-- Piernas -->
+    <line x1="27" y1="40" x2="22" y2="55" stroke="#2c3e50" stroke-width="5" stroke-linecap="round"/>
+    <line x1="37" y1="40" x2="42" y2="55" stroke="#2c3e50" stroke-width="5" stroke-linecap="round"/>
+  </g>
+  
+  <!-- Frame 4: Walk 2 -->
+  <g transform="translate(192, 0)">
+    <!-- Cuerpo principal -->
+    <circle cx="32" cy="25" r="15" fill="#3498db"/>
+    <!-- Cabeza -->
+    <circle cx="32" cy="15" r="10" fill="#f5d6ba"/>
+    <!-- Ojos -->
+    <circle cx="29" cy="13" r="2" fill="#2c3e50"/>
+    <circle cx="35" cy="13" r="2" fill="#2c3e50"/>
+    <!-- Boca -->
+    <path d="M30,19 Q32,21 34,19" stroke="#2c3e50" stroke-width="1" fill="none"/>
+    <!-- Brazos -->
+    <line x1="20" y1="25" x2="10" y2="20" stroke="#3498db" stroke-width="5" stroke-linecap="round"/>
+    <line x1="44" y1="25" x2="54" y2="20" stroke="#3498db" stroke-width="5" stroke-linecap="round"/>
+    <!-- Piernas -->
+    <line x1="27" y1="40" x2="32" y2="55" stroke="#2c3e50" stroke-width="5" stroke-linecap="round"/>
+    <line x1="37" y1="40" x2="32" y2="55" stroke="#2c3e50" stroke-width="5" stroke-linecap="round"/>
+  </g>
+  
+  <!-- Frame 5: Attack 1 -->
+  <g transform="translate(256, 0)">
+    <!-- Cuerpo principal -->
+    <circle cx="32" cy="25" r="15" fill="#3498db"/>
+    <!-- Cabeza -->
+    <circle cx="32" cy="15" r="10" fill="#f5d6ba"/>
+    <!-- Ojos -->
+    <circle cx="29" cy="13" r="2" fill="#2c3e50"/>
+    <circle cx="35" cy="13" r="2" fill="#2c3e50"/>
+    <!-- Boca -->
+    <path d="M30,19 Q32,21 34,19" stroke="#2c3e50" stroke-width="1" fill="none"/>
+    <!-- Brazo izquierdo -->
+    <line x1="20" y1="25" x2="15" y2="35" stroke="#3498db" stroke-width="5" stroke-linecap="round"/>
+    <!-- Brazo derecho (atacando) -->
+    <line x1="44" y1="25" x2="54" y2="15" stroke="#3498db" stroke-width="5" stroke-linecap="round"/>
+    <!-- Arma -->
+    <line x1="54" y1="15" x2="60" y2="5" stroke="#C0392B" stroke-width="3" stroke-linecap="round"/>
+    <!-- Piernas -->
+    <line x1="27" y1="40" x2="22" y2="55" stroke="#2c3e50" stroke-width="5" stroke-linecap="round"/>
+    <line x1="37" y1="40" x2="42" y2="55" stroke="#2c3e50" stroke-width="5" stroke-linecap="round"/>
+  </g>
+  
+  <!-- Frame 6: Attack 2 -->
+  <g transform="translate(320, 0)">
+    <!-- Cuerpo principal -->
+    <circle cx="32" cy="25" r="15" fill="#3498db"/>
+    <!-- Cabeza -->
+    <circle cx="32" cy="15" r="10" fill="#f5d6ba"/>
+    <!-- Ojos -->
+    <circle cx="29" cy="13" r="2" fill="#2c3e50"/>
+    <circle cx="35" cy="13" r="2" fill="#2c3e50"/>
+    <!-- Boca -->
+    <path d="M30,19 Q32,21 34,19" stroke="#2c3e50" stroke-width="1" fill="none"/>
+    <!-- Brazo izquierdo -->
+    <line x1="20" y1="25" x2="15" y2="35" stroke="#3498db" stroke-width="5" stroke-linecap="round"/>
+    <!-- Brazo derecho (atacando) -->
+    <line x1="44" y1="25" x2="53" y2="25" stroke="#3498db" stroke-width="5" stroke-linecap="round"/>
+    <!-- Arma -->
+    <line x1="53" y1="25" x2="63" y2="25" stroke="#C0392B" stroke-width="3" stroke-linecap="round"/>
+    <!-- Piernas -->
+    <line x1="27" y1="40" x2="22" y2="55" stroke="#2c3e50" stroke-width="5" stroke-linecap="round"/>
+    <line x1="37" y1="40" x2="42" y2="55" stroke="#2c3e50" stroke-width="5" stroke-linecap="round"/>
+  </g>
+</svg> 

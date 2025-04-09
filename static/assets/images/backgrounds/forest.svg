@@ -1,0 +1,77 @@
+<svg width="1024" height="768" xmlns="http://www.w3.org/2000/svg">
+  <!-- Cielo con degradado -->
+  <linearGradient id="cielo" x1="0%" y1="0%" x2="0%" y2="100%">
+    <stop offset="0%" style="stop-color:#4C87C7;stop-opacity:1" />
+    <stop offset="100%" style="stop-color:#95CFE8;stop-opacity:1" />
+  </linearGradient>
+  <rect width="100%" height="100%" fill="url(#cielo)"/>
+  
+  <!-- Montañas lejanas -->
+  <path d="M0,350 Q150,250 300,320 Q450,220 600,280 Q750,200 950,300 L1024,300 L1024,768 L0,768 Z" fill="#496A2D" opacity="0.5"/>
+  
+  <!-- Árboles lejanos -->
+  <path d="M0,400 L1024,400 L1024,500 L0,500 Z" fill="#2E561C"/>
+  
+  <!-- Árboles medianos -->
+  <g fill="#1E3B12">
+    <circle cx="100" cy="380" r="40"/>
+    <circle cx="150" cy="360" r="30"/>
+    <circle cx="200" cy="370" r="35"/>
+    <circle cx="300" cy="380" r="40"/>
+    <circle cx="350" cy="355" r="30"/>
+    <circle cx="400" cy="375" r="35"/>
+    <circle cx="500" cy="380" r="40"/>
+    <circle cx="550" cy="360" r="30"/>
+    <circle cx="600" cy="370" r="35"/>
+    <circle cx="700" cy="380" r="40"/>
+    <circle cx="750" cy="355" r="30"/>
+    <circle cx="800" cy="375" r="35"/>
+    <circle cx="900" cy="380" r="40"/>
+    <circle cx="950" cy="360" r="30"/>
+    <circle cx="1000" cy="370" r="35"/>
+  </g>
+  
+  <!-- Árboles cercanos -->
+  <g>
+    <!-- Troncos -->
+    <rect x="100" y="500" width="30" height="100" fill="#5D4037"/>
+    <rect x="300" y="500" width="30" height="120" fill="#5D4037"/>
+    <rect x="500" y="500" width="30" height="100" fill="#5D4037"/>
+    <rect x="700" y="500" width="30" height="110" fill="#5D4037"/>
+    <rect x="900" y="500" width="30" height="90" fill="#5D4037"/>
+    
+    <!-- Copas -->
+    <circle cx="115" cy="470" r="60" fill="#2E7D32"/>
+    <circle cx="315" cy="450" r="70" fill="#2E7D32"/>
+    <circle cx="515" cy="470" r="65" fill="#2E7D32"/>
+    <circle cx="715" cy="460" r="65" fill="#2E7D32"/>
+    <circle cx="915" cy="480" r="55" fill="#2E7D32"/>
+  </g>
+  
+  <!-- Suelo -->
+  <rect x="0" y="600" width="1024" height="168" fill="#795548"/>
+  
+  <!-- Hierba -->
+  <rect x="0" y="600" width="1024" height="20" fill="#4CAF50"/>
+  
+  <!-- Flores y detalles -->
+  <g fill="#FFEB3B">
+    <circle cx="150" cy="610" r="3"/>
+    <circle cx="250" cy="605" r="2"/>
+    <circle cx="350" cy="608" r="3"/>
+    <circle cx="450" cy="610" r="2"/>
+    <circle cx="550" cy="605" r="3"/>
+    <circle cx="650" cy="608" r="2"/>
+    <circle cx="750" cy="610" r="3"/>
+    <circle cx="850" cy="605" r="2"/>
+    <circle cx="950" cy="608" r="3"/>
+  </g>
+  
+  <!-- Arbustos -->
+  <g fill="#388E3C">
+    <ellipse cx="200" cy="610" rx="30" ry="15"/>
+    <ellipse cx="400" cy="610" rx="25" ry="12"/>
+    <ellipse cx="600" cy="610" rx="30" ry="15"/>
+    <ellipse cx="800" cy="610" rx="28" ry="14"/>
+  </g>
+</svg> 

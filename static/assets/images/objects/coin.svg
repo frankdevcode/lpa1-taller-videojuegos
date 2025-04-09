@@ -1,0 +1,40 @@
+<svg width="64" height="64" xmlns="http://www.w3.org/2000/svg">
+  <!-- Moneda -->
+  
+  <!-- Degradado para el efecto 3D -->
+  <linearGradient id="coinGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+    <stop offset="0%" style="stop-color:#FFEB7F;stop-opacity:1" />
+    <stop offset="50%" style="stop-color:#FFD700;stop-opacity:1" />
+    <stop offset="100%" style="stop-color:#FFB700;stop-opacity:1" />
+  </linearGradient>
+  
+  <!-- Degradado para el borde -->
+  <linearGradient id="edgeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+    <stop offset="0%" style="stop-color:#BF9B30;stop-opacity:1" />
+    <stop offset="100%" style="stop-color:#A67C00;stop-opacity:1" />
+  </linearGradient>
+  
+  <!-- Círculo principal (vista frontal) -->
+  <circle cx="32" cy="32" r="24" fill="url(#coinGradient)" stroke="url(#edgeGradient)" stroke-width="2"/>
+  
+  <!-- Borde interior para efecto de moneda -->
+  <circle cx="32" cy="32" r="21" fill="none" stroke="url(#edgeGradient)" stroke-width="1"/>
+  
+  <!-- Símbolo en la moneda -->
+  <text x="32" y="38" font-family="Verdana, sans-serif" font-size="18" font-weight="bold" fill="#A67C00" text-anchor="middle">$</text>
+  
+  <!-- Pequeñas marcas decorativas alrededor -->
+  <g fill="#A67C00">
+    <circle cx="32" cy="8" r="1.5"/>
+    <circle cx="32" cy="56" r="1.5"/>
+    <circle cx="8" cy="32" r="1.5"/>
+    <circle cx="56" cy="32" r="1.5"/>
+    <circle cx="15" cy="15" r="1"/>
+    <circle cx="49" cy="15" r="1"/>
+    <circle cx="15" cy="49" r="1"/>
+    <circle cx="49" cy="49" r="1"/>
+  </g>
+  
+  <!-- Brillo para efecto metálico -->
+  <ellipse cx="22" cy="22" rx="12" ry="10" fill="#FFFFFF" opacity="0.3"/>
+</svg> 

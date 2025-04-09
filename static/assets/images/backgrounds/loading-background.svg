@@ -1,0 +1,34 @@
+<svg width="1024" height="768" xmlns="http://www.w3.org/2000/svg">
+  <!-- Fondo con degradado -->
+  <rect width="100%" height="100%" fill="#1a1a2e"/>
+  
+  <!-- Patrón de estrellas -->
+  <g fill="#ffffff" opacity="0.8">
+    <circle cx="100" cy="100" r="2"/>
+    <circle cx="200" cy="150" r="1"/>
+    <circle cx="300" cy="200" r="1.5"/>
+    <circle cx="400" cy="100" r="1"/>
+    <circle cx="500" cy="300" r="2"/>
+    <circle cx="600" cy="400" r="1"/>
+    <circle cx="700" cy="200" r="1.5"/>
+    <circle cx="800" cy="300" r="1"/>
+    <circle cx="900" cy="100" r="2"/>
+    <circle cx="150" cy="350" r="1"/>
+    <circle cx="250" cy="450" r="1.5"/>
+    <circle cx="350" cy="550" r="1"/>
+    <circle cx="450" cy="650" r="2"/>
+    <circle cx="550" cy="500" r="1"/>
+    <circle cx="650" cy="450" r="1.5"/>
+    <circle cx="750" cy="550" r="1"/>
+    <circle cx="850" cy="650" r="2"/>
+    <circle cx="950" cy="500" r="1"/>
+  </g>
+  
+  <!-- Montañas de fondo -->
+  <path d="M0,768 L0,500 L200,600 L400,450 L600,550 L800,400 L1024,500 L1024,768 Z" fill="#0f3460" opacity="0.7"/>
+  <path d="M0,768 L0,600 L300,650 L500,550 L700,650 L900,550 L1024,650 L1024,768 Z" fill="#16213e" opacity="0.8"/>
+  
+  <!-- Título -->
+  <text x="512" y="200" font-family="Arial" font-size="48" font-weight="bold" fill="#ffffff" text-anchor="middle">AVENTURA FANTÁSTICA</text>
+  <text x="512" y="250" font-family="Arial" font-size="24" fill="#e94560" text-anchor="middle">Cargando recursos...</text>
+</svg> 

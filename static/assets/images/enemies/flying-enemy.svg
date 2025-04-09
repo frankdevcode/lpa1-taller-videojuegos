@@ -1,0 +1,177 @@
+<svg width="384" height="64" xmlns="http://www.w3.org/2000/svg">
+  <!-- 6 frames, cada uno de 64x64 píxeles -->
+  
+  <!-- Frame 1: Fly 1 -->
+  <g transform="translate(0, 0)">
+    <!-- Cuerpo principal -->
+    <ellipse cx="32" cy="32" rx="15" ry="10" fill="#2C3E50"/>
+    <!-- Cabeza -->
+    <circle cx="32" cy="22" r="8" fill="#34495E"/>
+    <!-- Ojos grandes -->
+    <circle cx="28" cy="20" r="3" fill="#ECF0F1"/>
+    <circle cx="36" cy="20" r="3" fill="#ECF0F1"/>
+    <!-- Pupilas -->
+    <circle cx="28" cy="20" r="1" fill="#E74C3C"/>
+    <circle cx="36" cy="20" r="1" fill="#E74C3C"/>
+    <!-- Boca pequeña -->
+    <path d="M30,25 Q32,27 34,25" stroke="#E74C3C" stroke-width="1" fill="none"/>
+    <!-- Alas extendidas -->
+    <path d="M32,32 C20,20 5,25 10,35" stroke="#7F8C8D" stroke-width="2" fill="#7F8C8D" opacity="0.8"/>
+    <path d="M32,32 C44,20 59,25 54,35" stroke="#7F8C8D" stroke-width="2" fill="#7F8C8D" opacity="0.8"/>
+    <!-- Patas/Garras -->
+    <line x1="27" y1="42" x2="25" y2="48" stroke="#34495E" stroke-width="2" stroke-linecap="round"/>
+    <line x1="25" y1="48" x2="22" y2="51" stroke="#34495E" stroke-width="1" stroke-linecap="round"/>
+    <line x1="25" y1="48" x2="25" y2="51" stroke="#34495E" stroke-width="1" stroke-linecap="round"/>
+    <line x1="25" y1="48" x2="28" y2="51" stroke="#34495E" stroke-width="1" stroke-linecap="round"/>
+    
+    <line x1="37" y1="42" x2="39" y2="48" stroke="#34495E" stroke-width="2" stroke-linecap="round"/>
+    <line x1="39" y1="48" x2="36" y2="51" stroke="#34495E" stroke-width="1" stroke-linecap="round"/>
+    <line x1="39" y1="48" x2="39" y2="51" stroke="#34495E" stroke-width="1" stroke-linecap="round"/>
+    <line x1="39" y1="48" x2="42" y2="51" stroke="#34495E" stroke-width="1" stroke-linecap="round"/>
+  </g>
+  
+  <!-- Frame 2: Fly 2 -->
+  <g transform="translate(64, 0)">
+    <!-- Cuerpo principal -->
+    <ellipse cx="32" cy="32" rx="15" ry="10" fill="#2C3E50"/>
+    <!-- Cabeza -->
+    <circle cx="32" cy="22" r="8" fill="#34495E"/>
+    <!-- Ojos grandes -->
+    <circle cx="28" cy="20" r="3" fill="#ECF0F1"/>
+    <circle cx="36" cy="20" r="3" fill="#ECF0F1"/>
+    <!-- Pupilas -->
+    <circle cx="28" cy="20" r="1" fill="#E74C3C"/>
+    <circle cx="36" cy="20" r="1" fill="#E74C3C"/>
+    <!-- Boca pequeña -->
+    <path d="M30,25 Q32,27 34,25" stroke="#E74C3C" stroke-width="1" fill="none"/>
+    <!-- Alas semi-extendidas -->
+    <path d="M32,32 C22,25 10,28 15,38" stroke="#7F8C8D" stroke-width="2" fill="#7F8C8D" opacity="0.8"/>
+    <path d="M32,32 C42,25 54,28 49,38" stroke="#7F8C8D" stroke-width="2" fill="#7F8C8D" opacity="0.8"/>
+    <!-- Patas/Garras -->
+    <line x1="27" y1="42" x2="25" y2="48" stroke="#34495E" stroke-width="2" stroke-linecap="round"/>
+    <line x1="25" y1="48" x2="22" y2="51" stroke="#34495E" stroke-width="1" stroke-linecap="round"/>
+    <line x1="25" y1="48" x2="25" y2="51" stroke="#34495E" stroke-width="1" stroke-linecap="round"/>
+    <line x1="25" y1="48" x2="28" y2="51" stroke="#34495E" stroke-width="1" stroke-linecap="round"/>
+    
+    <line x1="37" y1="42" x2="39" y2="48" stroke="#34495E" stroke-width="2" stroke-linecap="round"/>
+    <line x1="39" y1="48" x2="36" y2="51" stroke="#34495E" stroke-width="1" stroke-linecap="round"/>
+    <line x1="39" y1="48" x2="39" y2="51" stroke="#34495E" stroke-width="1" stroke-linecap="round"/>
+    <line x1="39" y1="48" x2="42" y2="51" stroke="#34495E" stroke-width="1" stroke-linecap="round"/>
+  </g>
+  
+  <!-- Frame 3: Fly 3 -->
+  <g transform="translate(128, 0)">
+    <!-- Cuerpo principal -->
+    <ellipse cx="32" cy="32" rx="15" ry="10" fill="#2C3E50"/>
+    <!-- Cabeza -->
+    <circle cx="32" cy="22" r="8" fill="#34495E"/>
+    <!-- Ojos grandes -->
+    <circle cx="28" cy="20" r="3" fill="#ECF0F1"/>
+    <circle cx="36" cy="20" r="3" fill="#ECF0F1"/>
+    <!-- Pupilas -->
+    <circle cx="28" cy="20" r="1" fill="#E74C3C"/>
+    <circle cx="36" cy="20" r="1" fill="#E74C3C"/>
+    <!-- Boca pequeña -->
+    <path d="M30,25 Q32,27 34,25" stroke="#E74C3C" stroke-width="1" fill="none"/>
+    <!-- Alas cerradas -->
+    <path d="M32,32 C25,28 15,32 20,40" stroke="#7F8C8D" stroke-width="2" fill="#7F8C8D" opacity="0.8"/>
+    <path d="M32,32 C39,28 49,32 44,40" stroke="#7F8C8D" stroke-width="2" fill="#7F8C8D" opacity="0.8"/>
+    <!-- Patas/Garras -->
+    <line x1="27" y1="42" x2="25" y2="48" stroke="#34495E" stroke-width="2" stroke-linecap="round"/>
+    <line x1="25" y1="48" x2="22" y2="51" stroke="#34495E" stroke-width="1" stroke-linecap="round"/>
+    <line x1="25" y1="48" x2="25" y2="51" stroke="#34495E" stroke-width="1" stroke-linecap="round"/>
+    <line x1="25" y1="48" x2="28" y2="51" stroke="#34495E" stroke-width="1" stroke-linecap="round"/>
+    
+    <line x1="37" y1="42" x2="39" y2="48" stroke="#34495E" stroke-width="2" stroke-linecap="round"/>
+    <line x1="39" y1="48" x2="36" y2="51" stroke="#34495E" stroke-width="1" stroke-linecap="round"/>
+    <line x1="39" y1="48" x2="39" y2="51" stroke="#34495E" stroke-width="1" stroke-linecap="round"/>
+    <line x1="39" y1="48" x2="42" y2="51" stroke="#34495E" stroke-width="1" stroke-linecap="round"/>
+  </g>
+  
+  <!-- Frame 4: Fly 4 -->
+  <g transform="translate(192, 0)">
+    <!-- Cuerpo principal -->
+    <ellipse cx="32" cy="32" rx="15" ry="10" fill="#2C3E50"/>
+    <!-- Cabeza -->
+    <circle cx="32" cy="22" r="8" fill="#34495E"/>
+    <!-- Ojos grandes -->
+    <circle cx="28" cy="20" r="3" fill="#ECF0F1"/>
+    <circle cx="36" cy="20" r="3" fill="#ECF0F1"/>
+    <!-- Pupilas -->
+    <circle cx="28" cy="20" r="1" fill="#E74C3C"/>
+    <circle cx="36" cy="20" r="1" fill="#E74C3C"/>
+    <!-- Boca pequeña -->
+    <path d="M30,25 Q32,27 34,25" stroke="#E74C3C" stroke-width="1" fill="none"/>
+    <!-- Alas semi-extendidas -->
+    <path d="M32,32 C22,25 10,28 15,38" stroke="#7F8C8D" stroke-width="2" fill="#7F8C8D" opacity="0.8"/>
+    <path d="M32,32 C42,25 54,28 49,38" stroke="#7F8C8D" stroke-width="2" fill="#7F8C8D" opacity="0.8"/>
+    <!-- Patas/Garras -->
+    <line x1="27" y1="42" x2="25" y2="48" stroke="#34495E" stroke-width="2" stroke-linecap="round"/>
+    <line x1="25" y1="48" x2="22" y2="51" stroke="#34495E" stroke-width="1" stroke-linecap="round"/>
+    <line x1="25" y1="48" x2="25" y2="51" stroke="#34495E" stroke-width="1" stroke-linecap="round"/>
+    <line x1="25" y1="48" x2="28" y2="51" stroke="#34495E" stroke-width="1" stroke-linecap="round"/>
+    
+    <line x1="37" y1="42" x2="39" y2="48" stroke="#34495E" stroke-width="2" stroke-linecap="round"/>
+    <line x1="39" y1="48" x2="36" y2="51" stroke="#34495E" stroke-width="1" stroke-linecap="round"/>
+    <line x1="39" y1="48" x2="39" y2="51" stroke="#34495E" stroke-width="1" stroke-linecap="round"/>
+    <line x1="39" y1="48" x2="42" y2="51" stroke="#34495E" stroke-width="1" stroke-linecap="round"/>
+  </g>
+  
+  <!-- Frame 5: Attack 1 -->
+  <g transform="translate(256, 0)">
+    <!-- Cuerpo principal (girado para ataque) -->
+    <ellipse cx="32" cy="32" rx="15" ry="10" fill="#2C3E50" transform="rotate(20, 32, 32)"/>
+    <!-- Cabeza -->
+    <circle cx="32" cy="22" r="8" fill="#34495E"/>
+    <!-- Ojos grandes (enojados) -->
+    <circle cx="28" cy="20" r="3" fill="#ECF0F1"/>
+    <circle cx="36" cy="20" r="3" fill="#ECF0F1"/>
+    <!-- Pupilas -->
+    <circle cx="28" cy="20" r="1" fill="#E74C3C"/>
+    <circle cx="36" cy="20" r="1" fill="#E74C3C"/>
+    <!-- Boca (abierta) -->
+    <ellipse cx="32" cy="25" rx="3" ry="2" fill="#E74C3C"/>
+    <!-- Alas en posición de ataque -->
+    <path d="M32,32 C20,20 0,20 5,35" stroke="#7F8C8D" stroke-width="2" fill="#7F8C8D" opacity="0.8"/>
+    <path d="M32,32 C44,20 64,20 59,35" stroke="#7F8C8D" stroke-width="2" fill="#7F8C8D" opacity="0.8"/>
+    <!-- Patas/Garras (extendidas para ataque) -->
+    <line x1="27" y1="42" x2="20" y2="50" stroke="#34495E" stroke-width="2" stroke-linecap="round"/>
+    <line x1="20" y1="50" x2="17" y2="53" stroke="#34495E" stroke-width="1" stroke-linecap="round"/>
+    <line x1="20" y1="50" x2="20" y2="54" stroke="#34495E" stroke-width="1" stroke-linecap="round"/>
+    <line x1="20" y1="50" x2="23" y2="53" stroke="#34495E" stroke-width="1" stroke-linecap="round"/>
+    
+    <line x1="37" y1="42" x2="44" y2="50" stroke="#34495E" stroke-width="2" stroke-linecap="round"/>
+    <line x1="44" y1="50" x2="41" y2="53" stroke="#34495E" stroke-width="1" stroke-linecap="round"/>
+    <line x1="44" y1="50" x2="44" y2="54" stroke="#34495E" stroke-width="1" stroke-linecap="round"/>
+    <line x1="44" y1="50" x2="47" y2="53" stroke="#34495E" stroke-width="1" stroke-linecap="round"/>
+  </g>
+  
+  <!-- Frame 6: Attack 2 -->
+  <g transform="translate(320, 0)">
+    <!-- Cuerpo principal (girado para ataque) -->
+    <ellipse cx="32" cy="32" rx="15" ry="10" fill="#2C3E50" transform="rotate(-20, 32, 32)"/>
+    <!-- Cabeza -->
+    <circle cx="32" cy="22" r="8" fill="#34495E"/>
+    <!-- Ojos grandes (enojados) -->
+    <circle cx="28" cy="20" r="3" fill="#ECF0F1"/>
+    <circle cx="36" cy="20" r="3" fill="#ECF0F1"/>
+    <!-- Pupilas -->
+    <circle cx="28" cy="20" r="1" fill="#E74C3C"/>
+    <circle cx="36" cy="20" r="1" fill="#E74C3C"/>
+    <!-- Boca (abierta) -->
+    <ellipse cx="32" cy="25" rx="3" ry="2" fill="#E74C3C"/>
+    <!-- Alas en posición de ataque -->
+    <path d="M32,32 C20,15 5,10 10,30" stroke="#7F8C8D" stroke-width="2" fill="#7F8C8D" opacity="0.8"/>
+    <path d="M32,32 C44,15 59,10 54,30" stroke="#7F8C8D" stroke-width="2" fill="#7F8C8D" opacity="0.8"/>
+    <!-- Patas/Garras (extendidas para ataque) -->
+    <line x1="27" y1="42" x2="22" y2="54" stroke="#34495E" stroke-width="2" stroke-linecap="round"/>
+    <line x1="22" y1="54" x2="19" y2="57" stroke="#34495E" stroke-width="1" stroke-linecap="round"/>
+    <line x1="22" y1="54" x2="22" y2="58" stroke="#34495E" stroke-width="1" stroke-linecap="round"/>
+    <line x1="22" y1="54" x2="25" y2="57" stroke="#34495E" stroke-width="1" stroke-linecap="round"/>
+    
+    <line x1="37" y1="42" x2="42" y2="54" stroke="#34495E" stroke-width="2" stroke-linecap="round"/>
+    <line x1="42" y1="54" x2="39" y2="57" stroke="#34495E" stroke-width="1" stroke-linecap="round"/>
+    <line x1="42" y1="54" x2="42" y2="58" stroke="#34495E" stroke-width="1" stroke-linecap="round"/>
+    <line x1="42" y1="54" x2="45" y2="57" stroke="#34495E" stroke-width="1" stroke-linecap="round"/>
+  </g>
+</svg> 
