@@ -51,10 +51,20 @@ class MainMenu extends Phaser.Scene {
         
         // Agregar eventos de los botones
         playButton.on('pointerdown', () => {
+            console.log("Iniciando juego");
             this.scene.start('Game');
         });
         
-        // Agregar música de fondo
+        optionsButton.on('pointerdown', () => {
+            console.log("Opciones - Función no implementada");
+        });
+        
+        creditsButton.on('pointerdown', () => {
+            console.log("Créditos - Función no implementada");
+        });
+        
+        // Agregar música de fondo (comentado porque no tenemos el archivo de audio)
+        /*
         if (!this.sound.get('background-music')) {
             const music = this.sound.add('background-music', {
                 volume: 0.5,
@@ -62,6 +72,7 @@ class MainMenu extends Phaser.Scene {
             });
             music.play();
         }
+        */
         
         // Efecto de hover para los botones
         [playButton, optionsButton, creditsButton].forEach(button => {

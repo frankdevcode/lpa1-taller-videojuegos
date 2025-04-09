@@ -10,11 +10,14 @@
 <body>
     <div id="game-container"></div>
     
-    <script src="{{ url_for('static', filename='js/config.js') }}"></script>
+    <!-- Primero cargamos las escenas -->
     <script src="{{ url_for('static', filename='js/scenes/Boot.js') }}"></script>
     <script src="{{ url_for('static', filename='js/scenes/Preload.js') }}"></script>
     <script src="{{ url_for('static', filename='js/scenes/MainMenu.js') }}"></script>
     <script src="{{ url_for('static', filename='js/scenes/Game.js') }}"></script>
+    <!-- Luego la configuración que usa las escenas -->
+    <script src="{{ url_for('static', filename='js/config.js') }}"></script>
+    <!-- Finalmente el script principal que inicia el juego -->
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 </html> 

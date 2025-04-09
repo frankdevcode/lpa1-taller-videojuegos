@@ -59,50 +59,53 @@ class Preload extends Phaser.Scene {
         // Cargar todos los assets del juego
         
         // Fondos
-        this.load.image('background-forest', '/assets/images/backgrounds/forest.png');
-        this.load.image('background-dungeon', '/assets/images/backgrounds/dungeon.png');
-        this.load.image('background-village', '/assets/images/backgrounds/village.png');
+        this.load.image('background-forest', '/static/assets/images/backgrounds/forest.svg');
+        this.load.image('background-dungeon', '/static/assets/images/backgrounds/dungeon.svg');
+        this.load.image('background-village', '/static/assets/images/backgrounds/village.svg');
         
+        // Interfaz
+        this.load.image('button', '/static/assets/images/ui/button.svg');
+        this.load.image('health-bar', '/static/assets/images/ui/health-bar.svg');
+        
+        // ... mantener el resto de cargas de assets comentadas por ahora
+        /* 
         // Personajes
-        this.load.spritesheet('player', '/assets/images/characters/player.png', { 
+        this.load.spritesheet('player', '/static/assets/images/characters/player.png', { 
             frameWidth: 64, frameHeight: 64 
         });
         
         // Enemigos
-        this.load.spritesheet('enemy-ground', '/assets/images/enemies/ground-enemy.png', { 
+        this.load.spritesheet('enemy-ground', '/static/assets/images/enemies/ground-enemy.png', { 
             frameWidth: 64, frameHeight: 64 
         });
-        this.load.spritesheet('enemy-flying', '/assets/images/enemies/flying-enemy.png', { 
+        this.load.spritesheet('enemy-flying', '/static/assets/images/enemies/flying-enemy.png', { 
             frameWidth: 64, frameHeight: 64 
         });
         
         // Objetos
-        this.load.image('treasure-chest', '/assets/images/objects/treasure-chest.png');
-        this.load.image('potion', '/assets/images/objects/potion.png');
-        this.load.image('bomb', '/assets/images/objects/bomb.png');
-        this.load.image('coin', '/assets/images/objects/coin.png');
+        this.load.image('treasure-chest', '/static/assets/images/objects/treasure-chest.png');
+        this.load.image('potion', '/static/assets/images/objects/potion.png');
+        this.load.image('bomb', '/static/assets/images/objects/bomb.png');
+        this.load.image('coin', '/static/assets/images/objects/coin.png');
         
         // Efectos
-        this.load.spritesheet('explosion', '/assets/images/effects/explosion.png', { 
+        this.load.spritesheet('explosion', '/static/assets/images/effects/explosion.png', { 
             frameWidth: 64, frameHeight: 64 
         });
-        this.load.spritesheet('magic', '/assets/images/effects/magic.png', { 
+        this.load.spritesheet('magic', '/static/assets/images/effects/magic.png', { 
             frameWidth: 64, frameHeight: 64 
         });
-        
-        // Interfaz
-        this.load.image('button', '/assets/images/ui/button.png');
-        this.load.image('health-bar', '/assets/images/ui/health-bar.png');
         
         // Sonidos
-        this.load.audio('background-music', '/assets/sounds/background-music.mp3');
-        this.load.audio('explosion-sound', '/assets/sounds/explosion.mp3');
-        this.load.audio('coin-sound', '/assets/sounds/coin.mp3');
+        this.load.audio('background-music', '/static/assets/sounds/background-music.mp3');
+        this.load.audio('explosion-sound', '/static/assets/sounds/explosion.mp3');
+        this.load.audio('coin-sound', '/static/assets/sounds/coin.mp3');
+        */
     }
 
     create() {
-        // Configurar animaciones
-
+        // Comentar las animaciones por ahora ya que no tenemos los spritesheets
+        /*
         // Animaciones del jugador
         this.anims.create({
             key: 'player-idle',
@@ -154,6 +157,7 @@ class Preload extends Phaser.Scene {
             frameRate: 15,
             repeat: 0
         });
+        */
 
         // Iniciar el menú principal
         this.scene.start('MainMenu');

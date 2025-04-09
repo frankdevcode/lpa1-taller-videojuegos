@@ -5,8 +5,8 @@ class Boot extends Phaser.Scene {
 
     preload() {
         // Cargar assets básicos necesarios para la pantalla de carga
-        this.load.image('loading-background', '/assets/images/backgrounds/loading-background.png');
-        this.load.image('loading-bar', '/assets/images/ui/loading-bar.png');
+        this.load.image('loading-background', '/static/assets/images/backgrounds/loading-background.svg');
+        this.load.image('loading-bar', '/static/assets/images/ui/loading-bar.svg');
     }
 
     create() {
