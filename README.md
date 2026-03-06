@@ -1,13 +1,12 @@
 # Taller Videojuegos
 
-![commits](https://badgen.net/github/commits/UR-CC/lpa1-taller-videojuegos?icon=github) 
-![last_commit](https://img.shields.io/github/last-commit/UR-CC/lpa1-taller-videojuegos)
-
+![commits](https://badgen.net/github/commits/clubdecomputacion/lpa1-taller-videojuegos?icon=github) 
+![last_commit](https://img.shields.io/github/last-commit/clubdecomputacion/lpa1-taller-videojuegos)
 - ver [badgen](https://badgen.net/) o [shields](https://shields.io/) para otros tipos de _badges_
 
 ## Autor
 
-- [@estudiante](https://www.github.com/estudiante)
+- [@estudiante](https://github.com/estudiante)
 
 ## Descripción del Proyecto
 
@@ -111,30 +110,30 @@ El proyecto se dividirá en varias fases, comenzando con la creación de clases 
 
 1. Clonar el proyecto
 
-```bash
-git clone https://github.com/UR-CC/lpa1-taller-videojuegos.git
-cd lpa1-taller-videojuegos
-```
+    ```bash
+    git clone https://github.com/clubdecomputacion/lpa1-taller-videojuegos.git
+    cd lpa1-taller-videojuegos
+    ```
 
 2. Crear y activar entorno virtual
 
-```bash
-python -m venv venv
-venv/bin/activate
-```
+    ```bash
+    python3 -m venv venv
+    source venv/bin/activate
+    ```
 
 3. Instalar librerías y dependencias
 
-```bash
-pip install -r requirements.txt
-```
+    ```bash
+    pip install -r requirements.txt
+    ```
     
 ## Ejecución
 
 1. Ejecutar el proyecto
 
-```bash
-cd lpa1-taller-videojuegos
-python main.py
-```
+    ```bash
+    cd lpa1-taller-videojuegos
+    python3 main.py
+    ```
 
