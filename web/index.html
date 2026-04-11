@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Cazador de Bestias del Bosque</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <header class="header">
+      <div class="title">
+        <h1>Cazador de Bestias del Bosque</h1>
+        <p>Versión web (modo local)</p>
+      </div>
+      <div class="menu">
+        <label>
+          Slot
+          <select id="slotSelect">
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+          </select>
+        </label>
+        <label>
+          Dificultad
+          <select id="difficultySelect">
+            <option value="explorador">explorador</option>
+            <option value="cazador" selected>cazador</option>
+            <option value="leyenda">leyenda</option>
+          </select>
+        </label>
+        <button id="newBtn">Nueva</button>
+        <button id="loadBtn">Cargar</button>
+        <button id="saveBtn">Guardar</button>
+      </div>
+    </header>
+
+    <main class="layout">
+      <section class="panel">
+        <h2>Estado</h2>
+        <div id="status"></div>
+        <div class="controls">
+          <div class="controls-row">
+            <button data-action="move" data-direction="n">N</button>
+          </div>
+          <div class="controls-row">
+            <button data-action="move" data-direction="o">O</button>
+            <button data-action="move" data-direction="s">S</button>
+            <button data-action="move" data-direction="e">E</button>
+          </div>
+          <div class="controls-row">
+            <button data-action="attack">Atacar</button>
+            <button data-action="defend">Defender</button>
+            <button data-action="trap">Trampa</button>
+            <button data-action="use">Usar</button>
+            <button id="rankingBtn">Ranking</button>
+          </div>
+          <div class="controls-row">
+            <button data-action="rest">Descansar</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Mapa</h2>
+        <div id="map" class="map"></div>
+        <h2>Zona</h2>
+        <div id="tile"></div>
+      </section>
+
+      <section class="panel">
+        <h2>Inventario</h2>
+        <div id="inventory"></div>
+        <h2>Tienda</h2>
+        <div id="shop"></div>
+      </section>
+
+      <section class="panel">
+        <h2>Registro</h2>
+        <div id="log" class="log"></div>
+      </section>
+    </main>
+
+    <div id="modal" class="modal hidden">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 id="modalTitle"></h3>
+          <button id="modalClose">Cerrar</button>
+        </div>
+        <div id="modalBody" class="modal-body"></div>
+      </div>
+    </div>
+
+    <script src="/static/app.js"></script>
+  </body>
+</html>

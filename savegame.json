@@ -1,0 +1,641 @@
+{
+  "difficulty": "cazador",
+  "position": {
+    "x": 2,
+    "y": 2
+  },
+  "boss_unlocked": false,
+  "enemies_defeated": 0,
+  "score": 0,
+  "items_bought": 0,
+  "items_sold": 0,
+  "discovered_treasures": 0,
+  "tutorial_completed": false,
+  "achievements": [],
+  "event_log": [
+    "Comienza la expedición en el corazón del bosque.",
+    "Tu misión inicial es sobrevivir, explorar y recolectar reliquias.",
+    "Dificultad activa: Cazador.",
+    "Explora el bosque y prepárate para derrotar a la Bestia Alfa.",
+    "Usa tutorial o ayuda para recibir orientación táctica."
+  ],
+  "game_over": false,
+  "victory": false,
+  "hunter": {
+    "name": "Aren, cazador del bosque",
+    "max_health": 48,
+    "current_health": 48,
+    "base_attack": 11,
+    "base_defense": 5,
+    "guard_bonus": 0,
+    "level": 1,
+    "experience": 0,
+    "gold": 20,
+    "inventory": [],
+    "equipped_weapon_index": null,
+    "equipped_armor_index": null
+  },
+  "world": {
+    "width": 5,
+    "height": 5,
+    "enemy_health_bonus": 4,
+    "enemy_attack_bonus": 1,
+    "tiles": [
+      {
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "terrain_name": "sendero cubierto",
+        "explored": false,
+        "enemy": {
+          "name": "Lobo sombrío",
+          "max_health": 28,
+          "current_health": 28,
+          "base_attack": 10,
+          "base_defense": 3,
+          "guard_bonus": 0,
+          "enemy_type": "terrestre",
+          "reward_experience": 35,
+          "reward_gold": 18,
+          "is_boss": false
+        },
+        "item": null,
+        "zone_type": "bosque salvaje",
+        "rest_available": false,
+        "shop_inventory": []
+      },
+      {
+        "position": {
+          "x": 1,
+          "y": 0
+        },
+        "terrain_name": "cascada escondida",
+        "explored": false,
+        "enemy": null,
+        "item": {
+          "name": "Capa reforzada",
+          "value": 55,
+          "kind": "armor",
+          "defense_bonus": 3
+        },
+        "zone_type": "bosque salvaje",
+        "rest_available": false,
+        "shop_inventory": []
+      },
+      {
+        "position": {
+          "x": 2,
+          "y": 0
+        },
+        "terrain_name": "altar olvidado",
+        "explored": false,
+        "enemy": {
+          "name": "Harpía del dosel",
+          "max_health": 26,
+          "current_health": 26,
+          "base_attack": 12,
+          "base_defense": 2,
+          "guard_bonus": 0,
+          "enemy_type": "volador",
+          "reward_experience": 42,
+          "reward_gold": 24,
+          "is_boss": false
+        },
+        "item": null,
+        "zone_type": "bosque salvaje",
+        "rest_available": false,
+        "shop_inventory": []
+      },
+      {
+        "position": {
+          "x": 3,
+          "y": 0
+        },
+        "terrain_name": "claro antiguo",
+        "explored": false,
+        "enemy": {
+          "name": "Lobo sombrío",
+          "max_health": 28,
+          "current_health": 28,
+          "base_attack": 10,
+          "base_defense": 3,
+          "guard_bonus": 0,
+          "enemy_type": "terrestre",
+          "reward_experience": 35,
+          "reward_gold": 18,
+          "is_boss": false
+        },
+        "item": null,
+        "zone_type": "bosque salvaje",
+        "rest_available": false,
+        "shop_inventory": []
+      },
+      {
+        "position": {
+          "x": 4,
+          "y": 0
+        },
+        "terrain_name": "altar olvidado",
+        "explored": false,
+        "enemy": {
+          "name": "Harpía del dosel",
+          "max_health": 26,
+          "current_health": 26,
+          "base_attack": 12,
+          "base_defense": 2,
+          "guard_bonus": 0,
+          "enemy_type": "volador",
+          "reward_experience": 42,
+          "reward_gold": 24,
+          "is_boss": false
+        },
+        "item": null,
+        "zone_type": "bosque salvaje",
+        "rest_available": false,
+        "shop_inventory": []
+      },
+      {
+        "position": {
+          "x": 0,
+          "y": 1
+        },
+        "terrain_name": "cueva musgosa",
+        "explored": false,
+        "enemy": {
+          "name": "Jabalí furioso",
+          "max_health": 34,
+          "current_health": 34,
+          "base_attack": 11,
+          "base_defense": 4,
+          "guard_bonus": 0,
+          "enemy_type": "terrestre",
+          "reward_experience": 40,
+          "reward_gold": 20,
+          "is_boss": false
+        },
+        "item": null,
+        "zone_type": "bosque salvaje",
+        "rest_available": false,
+        "shop_inventory": []
+      },
+      {
+        "position": {
+          "x": 1,
+          "y": 1
+        },
+        "terrain_name": "cueva musgosa",
+        "explored": false,
+        "enemy": {
+          "name": "Lobo sombrío",
+          "max_health": 28,
+          "current_health": 28,
+          "base_attack": 10,
+          "base_defense": 3,
+          "guard_bonus": 0,
+          "enemy_type": "terrestre",
+          "reward_experience": 35,
+          "reward_gold": 18,
+          "is_boss": false
+        },
+        "item": null,
+        "zone_type": "bosque salvaje",
+        "rest_available": false,
+        "shop_inventory": []
+      },
+      {
+        "position": {
+          "x": 2,
+          "y": 1
+        },
+        "terrain_name": "sendero cubierto",
+        "explored": false,
+        "enemy": {
+          "name": "Lobo sombrío",
+          "max_health": 28,
+          "current_health": 28,
+          "base_attack": 10,
+          "base_defense": 3,
+          "guard_bonus": 0,
+          "enemy_type": "terrestre",
+          "reward_experience": 35,
+          "reward_gold": 18,
+          "is_boss": false
+        },
+        "item": null,
+        "zone_type": "bosque salvaje",
+        "rest_available": false,
+        "shop_inventory": []
+      },
+      {
+        "position": {
+          "x": 3,
+          "y": 1
+        },
+        "terrain_name": "altar olvidado",
+        "explored": false,
+        "enemy": {
+          "name": "Harpía del dosel",
+          "max_health": 26,
+          "current_health": 26,
+          "base_attack": 12,
+          "base_defense": 2,
+          "guard_bonus": 0,
+          "enemy_type": "volador",
+          "reward_experience": 42,
+          "reward_gold": 24,
+          "is_boss": false
+        },
+        "item": null,
+        "zone_type": "bosque salvaje",
+        "rest_available": false,
+        "shop_inventory": []
+      },
+      {
+        "position": {
+          "x": 4,
+          "y": 1
+        },
+        "terrain_name": "altar olvidado",
+        "explored": false,
+        "enemy": null,
+        "item": null,
+        "zone_type": "bosque salvaje",
+        "rest_available": false,
+        "shop_inventory": []
+      },
+      {
+        "position": {
+          "x": 0,
+          "y": 2
+        },
+        "terrain_name": "Puesto del guardabosques",
+        "explored": false,
+        "enemy": null,
+        "item": null,
+        "zone_type": "puesto avanzado",
+        "rest_available": true,
+        "shop_inventory": [
+          {
+            "name": "Arco de fresno",
+            "value": 75,
+            "kind": "weapon",
+            "attack_bonus": 5
+          },
+          {
+            "name": "Lanza pesada",
+            "value": 95,
+            "kind": "weapon",
+            "attack_bonus": 7
+          },
+          {
+            "name": "Armadura de cuero",
+            "value": 70,
+            "kind": "armor",
+            "defense_bonus": 4
+          },
+          {
+            "name": "Manto del veterano",
+            "value": 92,
+            "kind": "armor",
+            "defense_bonus": 6
+          },
+          {
+            "name": "Tónico de hierbas",
+            "value": 30,
+            "kind": "healing",
+            "heal_amount": 20
+          },
+          {
+            "name": "Carga de pólvora",
+            "value": 40,
+            "kind": "trap",
+            "explosion_range": 2,
+            "explosion_damage": 24
+          }
+        ]
+      },
+      {
+        "position": {
+          "x": 1,
+          "y": 2
+        },
+        "terrain_name": "cueva musgosa",
+        "explored": false,
+        "enemy": {
+          "name": "Lobo sombrío",
+          "max_health": 28,
+          "current_health": 28,
+          "base_attack": 10,
+          "base_defense": 3,
+          "guard_bonus": 0,
+          "enemy_type": "terrestre",
+          "reward_experience": 35,
+          "reward_gold": 18,
+          "is_boss": false
+        },
+        "item": null,
+        "zone_type": "bosque salvaje",
+        "rest_available": false,
+        "shop_inventory": []
+      },
+      {
+        "position": {
+          "x": 2,
+          "y": 2
+        },
+        "terrain_name": "Campamento del gremio",
+        "explored": true,
+        "enemy": null,
+        "item": null,
+        "zone_type": "campamento",
+        "rest_available": true,
+        "shop_inventory": [
+          {
+            "name": "Arco de fresno",
+            "value": 75,
+            "kind": "weapon",
+            "attack_bonus": 5
+          },
+          {
+            "name": "Lanza pesada",
+            "value": 95,
+            "kind": "weapon",
+            "attack_bonus": 7
+          },
+          {
+            "name": "Armadura de cuero",
+            "value": 70,
+            "kind": "armor",
+            "defense_bonus": 4
+          },
+          {
+            "name": "Manto del veterano",
+            "value": 92,
+            "kind": "armor",
+            "defense_bonus": 6
+          },
+          {
+            "name": "Tónico de hierbas",
+            "value": 30,
+            "kind": "healing",
+            "heal_amount": 20
+          },
+          {
+            "name": "Carga de pólvora",
+            "value": 40,
+            "kind": "trap",
+            "explosion_range": 2,
+            "explosion_damage": 24
+          }
+        ]
+      },
+      {
+        "position": {
+          "x": 3,
+          "y": 2
+        },
+        "terrain_name": "cascada escondida",
+        "explored": false,
+        "enemy": null,
+        "item": {
+          "name": "Colmillo raro",
+          "value": 20,
+          "kind": "treasure"
+        },
+        "zone_type": "bosque salvaje",
+        "rest_available": false,
+        "shop_inventory": []
+      },
+      {
+        "position": {
+          "x": 4,
+          "y": 2
+        },
+        "terrain_name": "pantano silencioso",
+        "explored": false,
+        "enemy": null,
+        "item": {
+          "name": "Capa reforzada",
+          "value": 55,
+          "kind": "armor",
+          "defense_bonus": 3
+        },
+        "zone_type": "bosque salvaje",
+        "rest_available": false,
+        "shop_inventory": []
+      },
+      {
+        "position": {
+          "x": 0,
+          "y": 3
+        },
+        "terrain_name": "sendero cubierto",
+        "explored": false,
+        "enemy": {
+          "name": "Jabalí furioso",
+          "max_health": 34,
+          "current_health": 34,
+          "base_attack": 11,
+          "base_defense": 4,
+          "guard_bonus": 0,
+          "enemy_type": "terrestre",
+          "reward_experience": 40,
+          "reward_gold": 20,
+          "is_boss": false
+        },
+        "item": null,
+        "zone_type": "bosque salvaje",
+        "rest_available": false,
+        "shop_inventory": []
+      },
+      {
+        "position": {
+          "x": 1,
+          "y": 3
+        },
+        "terrain_name": "pantano silencioso",
+        "explored": false,
+        "enemy": null,
+        "item": null,
+        "zone_type": "bosque salvaje",
+        "rest_available": false,
+        "shop_inventory": []
+      },
+      {
+        "position": {
+          "x": 2,
+          "y": 3
+        },
+        "terrain_name": "sendero cubierto",
+        "explored": false,
+        "enemy": null,
+        "item": {
+          "name": "Amuleto del bosque",
+          "value": 35,
+          "kind": "treasure"
+        },
+        "zone_type": "bosque salvaje",
+        "rest_available": false,
+        "shop_inventory": []
+      },
+      {
+        "position": {
+          "x": 3,
+          "y": 3
+        },
+        "terrain_name": "cascada escondida",
+        "explored": false,
+        "enemy": {
+          "name": "Lobo sombrío",
+          "max_health": 28,
+          "current_health": 28,
+          "base_attack": 10,
+          "base_defense": 3,
+          "guard_bonus": 0,
+          "enemy_type": "terrestre",
+          "reward_experience": 35,
+          "reward_gold": 18,
+          "is_boss": false
+        },
+        "item": null,
+        "zone_type": "bosque salvaje",
+        "rest_available": false,
+        "shop_inventory": []
+      },
+      {
+        "position": {
+          "x": 4,
+          "y": 3
+        },
+        "terrain_name": "claro antiguo",
+        "explored": false,
+        "enemy": {
+          "name": "Harpía del dosel",
+          "max_health": 26,
+          "current_health": 26,
+          "base_attack": 12,
+          "base_defense": 2,
+          "guard_bonus": 0,
+          "enemy_type": "volador",
+          "reward_experience": 42,
+          "reward_gold": 24,
+          "is_boss": false
+        },
+        "item": null,
+        "zone_type": "bosque salvaje",
+        "rest_available": false,
+        "shop_inventory": []
+      },
+      {
+        "position": {
+          "x": 0,
+          "y": 4
+        },
+        "terrain_name": "cueva musgosa",
+        "explored": false,
+        "enemy": null,
+        "item": null,
+        "zone_type": "bosque salvaje",
+        "rest_available": false,
+        "shop_inventory": []
+      },
+      {
+        "position": {
+          "x": 1,
+          "y": 4
+        },
+        "terrain_name": "claro antiguo",
+        "explored": false,
+        "enemy": {
+          "name": "Harpía del dosel",
+          "max_health": 26,
+          "current_health": 26,
+          "base_attack": 12,
+          "base_defense": 2,
+          "guard_bonus": 0,
+          "enemy_type": "volador",
+          "reward_experience": 42,
+          "reward_gold": 24,
+          "is_boss": false
+        },
+        "item": null,
+        "zone_type": "bosque salvaje",
+        "rest_available": false,
+        "shop_inventory": []
+      },
+      {
+        "position": {
+          "x": 2,
+          "y": 4
+        },
+        "terrain_name": "pantano silencioso",
+        "explored": false,
+        "enemy": {
+          "name": "Lobo sombrío",
+          "max_health": 28,
+          "current_health": 28,
+          "base_attack": 10,
+          "base_defense": 3,
+          "guard_bonus": 0,
+          "enemy_type": "terrestre",
+          "reward_experience": 35,
+          "reward_gold": 18,
+          "is_boss": false
+        },
+        "item": null,
+        "zone_type": "bosque salvaje",
+        "rest_available": false,
+        "shop_inventory": []
+      },
+      {
+        "position": {
+          "x": 3,
+          "y": 4
+        },
+        "terrain_name": "cueva musgosa",
+        "explored": false,
+        "enemy": {
+          "name": "Lobo sombrío",
+          "max_health": 28,
+          "current_health": 28,
+          "base_attack": 10,
+          "base_defense": 3,
+          "guard_bonus": 0,
+          "enemy_type": "terrestre",
+          "reward_experience": 35,
+          "reward_gold": 18,
+          "is_boss": false
+        },
+        "item": null,
+        "zone_type": "bosque salvaje",
+        "rest_available": false,
+        "shop_inventory": []
+      },
+      {
+        "position": {
+          "x": 4,
+          "y": 4
+        },
+        "terrain_name": "Guarida de la bestia alfa",
+        "explored": false,
+        "enemy": {
+          "name": "Bestia Alfa del Dosel",
+          "max_health": 66,
+          "current_health": 66,
+          "base_attack": 16,
+          "base_defense": 6,
+          "guard_bonus": 0,
+          "enemy_type": "volador",
+          "reward_experience": 120,
+          "reward_gold": 90,
+          "is_boss": true
+        },
+        "item": null,
+        "zone_type": "guarida ancestral",
+        "rest_available": false,
+        "shop_inventory": []
+      }
+    ]
+  }
+}
