@@ -166,3 +166,26 @@ def test_boss_defeat_ends_the_game_with_victory() -> None:
 
     assert app.session.victory is True
     assert app.session.game_over is True
+
+
+def test_achievements_unlock_from_progression() -> None:
+    app = BeastHunterApp(Difficulty.EXPLORADOR)
+    app.session.discovered_treasures = 3
+    app.session.items_bought = 1
+    app.session.items_sold = 1
+    app.session.enemies_defeated = 5
+
+    app._evaluate_achievements()
+
+    assert "Primera sangre" in app.session.achievements
+    assert "Cazador veterano" in app.session.achievements
+    assert "Recolector del bosque" in app.session.achievements
+    assert "Mercader del gremio" in app.session.achievements
+
+
+def test_award_score_increases_session_score() -> None:
+    app = BeastHunterApp(Difficulty.EXPLORADOR)
+
+    app._award_score(25, "Prueba de puntaje.")
+
+    assert app.session.score == 25

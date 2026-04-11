@@ -42,6 +42,12 @@ class DifficultyConfig:
     starting_gold: int
 
 
+@dataclass(frozen=True, slots=True)
+class Achievement:
+    name: str
+    score_bonus: int
+
+
 DIFFICULTY_CONFIG = {
     Difficulty.EXPLORADOR: DifficultyConfig(
         label="Explorador",
@@ -63,6 +69,15 @@ DIFFICULTY_CONFIG = {
     ),
 }
 
+ACHIEVEMENTS = {
+    "first_blood": Achievement(name="Primera sangre", score_bonus=25),
+    "veteran_hunter": Achievement(name="Cazador veterano", score_bonus=80),
+    "forest_scavenger": Achievement(name="Recolector del bosque", score_bonus=45),
+    "guild_merchant": Achievement(name="Mercader del gremio", score_bonus=35),
+    "alpha_tracker": Achievement(name="Rastreador alfa", score_bonus=90),
+    "forest_legend": Achievement(name="Leyenda del bosque", score_bonus=150),
+}
+
 
 @dataclass(slots=True)
 class GameSession:
@@ -72,7 +87,11 @@ class GameSession:
     difficulty: Difficulty
     boss_unlocked: bool = False
     enemies_defeated: int = 0
+    score: int = 0
+    items_bought: int = 0
+    items_sold: int = 0
     discovered_treasures: int = 0
+    achievements: list[str] = field(default_factory=list)
     event_log: list[str] = field(default_factory=list)
     game_over: bool = False
     victory: bool = False
@@ -145,7 +164,14 @@ class BeastHunterApp:
         self._render()
         result_title = "Victoria" if self.session.victory else "Fin de la cacería"
         result_style = "bold green" if self.session.victory else "bold red"
-        content = "\n".join(self.session.event_log[-4:])
+        achievements = ", ".join(self.session.achievements) or "Sin logros"
+        content = "\n".join(
+            [
+                *self.session.event_log[-4:],
+                f"Puntaje final: {self.session.score}",
+                f"Logros: {achievements}",
+            ]
+        )
         self.console.print(
             Panel(content, title=result_title, style=result_style)
         )
@@ -168,6 +194,7 @@ class BeastHunterApp:
         self.console.print(self._build_status_table())
         self.console.print(self._build_map_table())
         self.console.print(self._build_tile_panel())
+        self.console.print(self._build_progress_panel())
         self.console.print(self._build_log_panel())
 
     def _build_status_table(self) -> Table:
@@ -181,6 +208,7 @@ class BeastHunterApp:
         table.add_column("Nivel")
         table.add_column("XP")
         table.add_column("Oro")
+        table.add_column("Puntaje")
         table.add_column("Exploración")
         table.add_column("Dificultad")
         table.add_column("Objetivo")
@@ -192,6 +220,7 @@ class BeastHunterApp:
             str(hunter.level),
             str(hunter.experience),
             str(hunter.gold),
+            str(self.session.score),
             f"{explored}/{total}",
             DIFFICULTY_CONFIG[self.session.difficulty].label,
             self._objective_status(),
@@ -244,6 +273,17 @@ class BeastHunterApp:
             lines.append(f"Tienda disponible con {len(tile.shop_inventory)} artículos.")
         return Panel("\n".join(lines), title="Entorno", border_style="cyan")
 
+    def _build_progress_panel(self) -> Panel:
+        achievements = self.session.achievements[-3:] or ["Sin logros desbloqueados todavía."]
+        lines = [
+            f"Enemigos derrotados: {self.session.enemies_defeated}",
+            f"Tesoros descubiertos: {self.session.discovered_treasures}",
+            f"Compras/Ventas: {self.session.items_bought}/{self.session.items_sold}",
+            f"Logros: {len(self.session.achievements)}",
+            f"Últimos logros: {' | '.join(achievements)}",
+        ]
+        return Panel("\n".join(lines), title="Progreso", border_style="magenta")
+
     def _build_log_panel(self) -> Panel:
         content = "\n".join(self.session.event_log[-6:]) or "Sin eventos todavía."
         return Panel(content, title="Registro", border_style="yellow")
@@ -276,6 +316,7 @@ class BeastHunterApp:
         tile = self.session.world.tile_at(self.session.position)
         if not tile.explored:
             tile.explored = True
+            self._award_score(10, f"Exploras {tile.terrain_name}.")
             self.session.log(f"Descubres {tile.terrain_name}.")
         else:
             self.session.log(f"Regresas a {tile.terrain_name}.")
@@ -304,21 +345,26 @@ class BeastHunterApp:
 
     def _process_loot(self, item: Item) -> None:
         if isinstance(item, Trap):
+            self._award_score(10, f"Recolectas {item.name}.")
             self.session.log(
                 f"Trampa almacenada: alcance {item.explosion_range}, daño {item.explosion_damage}."
             )
             return
         if isinstance(item, Weapon):
+            self._award_score(15, f"Aseguras el arma {item.name}.")
             self.session.log(
                 f"Nueva arma en inventario: {item.name}. Usa equipar para cambiar tu arma."
             )
             return
         if isinstance(item, Armor):
+            self._award_score(15, f"Aseguras la defensa {item.name}.")
             self.session.log(
                 f"Nueva defensa en inventario: {item.name}. Usa equipar para mejorar tu defensa."
             )
             return
         self.session.discovered_treasures += 1
+        self._award_score(item.value, f"Catalogas el tesoro {item.name}.")
+        self._evaluate_achievements()
         self.session.log(
             f"Guardas {item.name} en el inventario. "
             f"Valor de venta estimado: {item.sell_price()} monedas."
@@ -471,6 +517,9 @@ class BeastHunterApp:
         self.session.hunter.gold -= price
         self.session.hunter.add_item(item)
         tile.shop_inventory.remove(item)
+        self.session.items_bought += 1
+        self._award_score(10, f"Inviertes en {item.name}.")
+        self._evaluate_achievements()
         self.session.log(f"Compraste {item.name} por {price} monedas.")
         if isinstance(item, Trap):
             self.session.log("La trampa quedó lista en tu inventario.")
@@ -488,6 +537,9 @@ class BeastHunterApp:
             self.session.log("No vendiste ningún objeto.")
             return
         sale_price = self.session.hunter.sell_item(selected_item)
+        self.session.items_sold += 1
+        self._award_score(sale_price, f"Comercializas {selected_item.name}.")
+        self._evaluate_achievements()
         self.session.log(f"Vendiste {selected_item.name} por {sale_price} monedas.")
 
     def _rest(self) -> None:
@@ -500,6 +552,7 @@ class BeastHunterApp:
             self.session.log("Ya estás en plena forma.")
             return
         hunter.current_health = hunter.max_health
+        self._award_score(5, "Descansas y recuperas energías.")
         self.session.log("Descansas junto al fuego y recuperas toda tu vitalidad.")
 
     def _objective_status(self) -> str:
@@ -522,19 +575,46 @@ class BeastHunterApp:
         self.session.boss_unlocked = True
         boss_tile = self.session.world.boss_tile()
         boss_tile.explored = True
+        self._unlock_achievement("alpha_tracker")
         self.session.log("La barrera ancestral de la guarida alfa se ha disipado.")
         self.session.log("Ahora puedes desafiar a la Bestia Alfa en el extremo del bosque.")
 
     def _resolve_enemy_defeat(self, enemy: Enemy) -> None:
         self.session.enemies_defeated += 1
+        self._award_score(enemy.reward_experience + enemy.reward_gold, f"Vences a {enemy.name}.")
         self.session.hunter.gold += enemy.reward_gold
         for message in self.session.hunter.gain_experience(enemy.reward_experience):
             self.session.log(message)
+        self._evaluate_achievements()
         self.session.log(f"Derrotas a {enemy.name} y obtienes {enemy.reward_gold} monedas.")
         if enemy.is_boss:
+            self._unlock_achievement("forest_legend")
             self.session.game_over = True
             self.session.victory = True
             self.session.log("La Bestia Alfa cae. El bosque vuelve a estar en calma.")
+
+    def _award_score(self, amount: int, reason: str) -> None:
+        self.session.score += amount
+        self.session.log(f"+{amount} puntaje: {reason}")
+
+    def _unlock_achievement(self, key: str) -> None:
+        achievement = ACHIEVEMENTS[key]
+        if achievement.name in self.session.achievements:
+            return
+        self.session.achievements.append(achievement.name)
+        self.session.score += achievement.score_bonus
+        self.session.log(f"Logro desbloqueado: {achievement.name}.")
+        self.session.log(f"+{achievement.score_bonus} puntaje por logro.")
+
+    def _evaluate_achievements(self) -> None:
+        if self.session.enemies_defeated >= 1:
+            self._unlock_achievement("first_blood")
+        if self.session.enemies_defeated >= 5:
+            self._unlock_achievement("veteran_hunter")
+        if self.session.discovered_treasures >= 3:
+            self._unlock_achievement("forest_scavenger")
+        if self.session.items_bought >= 1 and self.session.items_sold >= 1:
+            self._unlock_achievement("guild_merchant")
 
     def _print_item_selection(
         self,
