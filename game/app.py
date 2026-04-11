@@ -83,6 +83,20 @@ ACHIEVEMENTS = {
     "forest_legend": Achievement(name="Leyenda del bosque", score_bonus=150),
 }
 
+HELP_TOPICS = {
+    "movimiento": "Usa n, s, e y o para explorar el bosque casilla por casilla.",
+    "combate": "Usa atacar para dañar, defender para resistir y trampa para castigar enemigos.",
+    "progreso": (
+        "Sube de nivel, explora el 60% del bosque y alcanza nivel 3 "
+        "para abrir la guarida alfa."
+    ),
+    "comercio": (
+        "Compra y vende en campamentos o puestos. "
+        "Usa equipar para activar tu mejor equipo."
+    ),
+    "persistencia": "Usa guardar para almacenar la partida y cargar para restaurarla más adelante.",
+}
+
 
 @dataclass(slots=True)
 class GameSession:
@@ -96,6 +110,7 @@ class GameSession:
     items_bought: int = 0
     items_sold: int = 0
     discovered_treasures: int = 0
+    tutorial_completed: bool = False
     achievements: list[str] = field(default_factory=list)
     event_log: list[str] = field(default_factory=list)
     game_over: bool = False
@@ -144,6 +159,7 @@ class BeastHunterApp:
         session.log("Tu misión inicial es sobrevivir, explorar y recolectar reliquias.")
         session.log(f"Dificultad activa: {config.label}.")
         session.log("Explora el bosque y prepárate para derrotar a la Bestia Alfa.")
+        session.log("Usa tutorial o ayuda para recibir orientación táctica.")
         return session
 
     def run(self) -> None:
@@ -166,6 +182,8 @@ class BeastHunterApp:
                     "descansar",
                     "guardar",
                     "cargar",
+                    "tutorial",
+                    "ayuda",
                     "salir",
                 ],
                 default="n",
@@ -195,7 +213,7 @@ class BeastHunterApp:
                 "Vertical slice profesional del proyecto: "
                 "exploración, combate, progresión y jefe final.\n"
                 "Comandos: n, s, e, o, atacar, defender, trampa, inventario, "
-                "equipar, tienda, descansar, guardar, cargar, salir",
+                "equipar, tienda, descansar, guardar, cargar, tutorial, ayuda, salir",
                 title="Inicio de Partida",
                 border_style="green",
             )
@@ -283,6 +301,7 @@ class BeastHunterApp:
             lines.append("Descanso disponible.")
         if tile.shop_inventory:
             lines.append(f"Tienda disponible con {len(tile.shop_inventory)} artículos.")
+        lines.append(f"Consejo: {self._context_hint()}")
         return Panel("\n".join(lines), title="Entorno", border_style="cyan")
 
     def _build_progress_panel(self) -> Panel:
@@ -292,6 +311,7 @@ class BeastHunterApp:
             f"Tesoros descubiertos: {self.session.discovered_treasures}",
             f"Compras/Ventas: {self.session.items_bought}/{self.session.items_sold}",
             f"Logros: {len(self.session.achievements)}",
+            f"Tutorial completado: {'sí' if self.session.tutorial_completed else 'no'}",
             f"Últimos logros: {' | '.join(achievements)}",
         ]
         return Panel("\n".join(lines), title="Progreso", border_style="magenta")
@@ -315,6 +335,8 @@ class BeastHunterApp:
             "descansar": self._rest,
             "guardar": self.save_game,
             "cargar": self.load_game,
+            "tutorial": self._run_tutorial,
+            "ayuda": self._show_help,
             "salir": self._quit_game,
         }
         action = actions[command]
@@ -569,6 +591,58 @@ class BeastHunterApp:
         self._award_score(5, "Descansas y recuperas energías.")
         self.session.log("Descansas junto al fuego y recuperas toda tu vitalidad.")
 
+    def _run_tutorial(self) -> None:
+        steps = [
+            "Explora con n, s, e y o para descubrir zonas, tesoros y amenazas.",
+            "Cuando encuentres enemigos, alterna atacar, defender y trampa según la situación.",
+            "Visita campamentos y puestos para comprar, vender, equipar y descansar.",
+            "Sube a nivel 3 y explora suficiente bosque para desbloquear la guarida alfa.",
+            "Usa guardar y cargar para administrar sesiones largas con seguridad.",
+        ]
+        self.console.print(
+            Panel(
+                "\n".join(f"{index}. {step}" for index, step in enumerate(steps, start=1)),
+                title="Tutorial del cazador",
+                border_style="blue",
+            )
+        )
+        if not self.session.tutorial_completed:
+            self.session.tutorial_completed = True
+            self._award_score(20, "Completas el tutorial del gremio.")
+        self.session.log("Tutorial revisado. Ya conoces el flujo principal de la expedición.")
+
+    def _show_help(self) -> None:
+        table = Table(title="Ayuda contextual", expand=True)
+        table.add_column("Tema")
+        table.add_column("Detalle")
+        for topic, detail in HELP_TOPICS.items():
+            table.add_row(topic.capitalize(), detail)
+        self.console.print(table)
+        self.session.log(f"Ayuda táctica: {self._context_hint()}")
+
+    def _context_hint(self) -> str:
+        tile = self.session.world.tile_at(self.session.position)
+        hunter = self.session.hunter
+        if tile.zone_type is ZoneType.GUARIDA and not self.session.boss_unlocked:
+            return "Necesitas nivel 3 y suficiente exploración para romper el sello alfa."
+        if tile.enemy and tile.enemy.is_alive():
+            if hunter.trap_count() > 0:
+                return "Tienes trampas listas; son ideales para abrir el combate."
+            if hunter.current_health <= max(12, hunter.max_health // 3):
+                return "Tu vida es baja; considera defender o retroceder a una zona segura."
+            return "Ataca para tomar la iniciativa o defiende si el enemigo te supera."
+        if tile.rest_available and hunter.current_health < hunter.max_health:
+            return "Descansar aquí restaurará toda tu vitalidad."
+        if tile.item:
+            return "Recoge el objeto para mejorar tu economía o tu equipamiento."
+        if tile.shop_inventory:
+            return "Revisa la tienda para invertir tu oro en ventaja táctica."
+        if not self.session.tutorial_completed:
+            return "Usa tutorial para una guía rápida del flujo completo del juego."
+        if not self.session.boss_unlocked:
+            return "Sigue explorando y subiendo nivel para abrir la guarida alfa."
+        return "Tu siguiente meta es derrotar a la Bestia Alfa."
+
     def _objective_status(self) -> str:
         if self.session.victory:
             return "Bestia Alfa derrotada"
@@ -665,6 +739,7 @@ class BeastHunterApp:
             "items_bought": self.session.items_bought,
             "items_sold": self.session.items_sold,
             "discovered_treasures": self.session.discovered_treasures,
+            "tutorial_completed": self.session.tutorial_completed,
             "achievements": list(self.session.achievements),
             "event_log": list(self.session.event_log),
             "game_over": self.session.game_over,
@@ -782,6 +857,7 @@ class BeastHunterApp:
             items_bought=int(data["items_bought"]),
             items_sold=int(data["items_sold"]),
             discovered_treasures=int(data["discovered_treasures"]),
+            tutorial_completed=bool(data.get("tutorial_completed", False)),
             achievements=[str(name) for name in data["achievements"]],
             event_log=[str(entry) for entry in data["event_log"]],
             game_over=bool(data["game_over"]),

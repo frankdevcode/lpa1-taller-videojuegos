@@ -228,3 +228,33 @@ def test_load_saved_game_returns_false_when_file_does_not_exist(tmp_path: Path) 
     loaded = app.load_saved_game()
 
     assert loaded is False
+
+
+def test_tutorial_marks_session_as_completed_and_awards_score() -> None:
+    app = BeastHunterApp(Difficulty.EXPLORADOR)
+
+    app._run_tutorial()
+
+    assert app.session.tutorial_completed is True
+    assert app.session.score == 20
+
+
+def test_context_hint_recommends_rest_when_health_is_low_in_safe_zone() -> None:
+    app = BeastHunterApp(Difficulty.EXPLORADOR)
+    app.session.hunter.current_health = 10
+
+    hint = app._context_hint()
+
+    assert "Descansar" in hint
+
+
+def test_save_and_load_preserves_tutorial_state(tmp_path: Path) -> None:
+    save_path = tmp_path / "tutorial-save.json"
+    app = BeastHunterApp(Difficulty.EXPLORADOR, save_path=save_path)
+    app.session.tutorial_completed = True
+    app.save_game()
+
+    loaded_app = BeastHunterApp(Difficulty.EXPLORADOR, save_path=save_path)
+    loaded_app.load_saved_game()
+
+    assert loaded_app.session.tutorial_completed is True
