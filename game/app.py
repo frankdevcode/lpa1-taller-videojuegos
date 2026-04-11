@@ -32,6 +32,7 @@ from .world import ForestMap, Tile, ZoneType
 SelectableItem = TypeVar("SelectableItem", bound=Item)
 DEFAULT_SAVE_PATH = Path(__file__).resolve().parent.parent / "savegame.json"
 SAVE_SLOT_COUNT = 3
+DEFAULT_LEADERBOARD_PATH = Path(__file__).resolve().parent.parent / "leaderboard.json"
 
 
 class Difficulty(StrEnum):
@@ -139,11 +140,13 @@ class BeastHunterApp:
         difficulty: Difficulty = Difficulty.CAZADOR,
         save_path: Path = DEFAULT_SAVE_PATH,
         active_slot: int | None = None,
+        leaderboard_path: Path = DEFAULT_LEADERBOARD_PATH,
     ) -> None:
         self.console = Console()
         self.rng = random.Random()
         self.save_path = save_path
         self.active_slot = active_slot
+        self.leaderboard_path = leaderboard_path
         self.session = self._create_session(difficulty)
 
     def _create_session(self, difficulty: Difficulty) -> GameSession:
@@ -219,6 +222,9 @@ class BeastHunterApp:
         self.console.print(
             Panel(content, title=result_title, style=result_style)
         )
+        leaderboard = load_leaderboard(self.leaderboard_path)
+        if leaderboard:
+            self.console.print(build_leaderboard_table(leaderboard[:5]))
 
     def _render_intro(self) -> None:
         self.console.print(
@@ -484,6 +490,7 @@ class BeastHunterApp:
             self.session.game_over = True
             self.session.victory = False
             self.session.log("Has caído durante la expedición.")
+            self._finalize_run()
 
     def _show_inventory(self) -> None:
         inventory = self.session.hunter.inventory
@@ -696,6 +703,7 @@ class BeastHunterApp:
             self.session.game_over = True
             self.session.victory = True
             self.session.log("La Bestia Alfa cae. El bosque vuelve a estar en calma.")
+            self._finalize_run()
 
     def _award_score(self, amount: int, reason: str) -> None:
         self.session.score += amount
@@ -719,6 +727,28 @@ class BeastHunterApp:
             self._unlock_achievement("forest_scavenger")
         if self.session.items_bought >= 1 and self.session.items_sold >= 1:
             self._unlock_achievement("guild_merchant")
+
+    def _finalize_run(self) -> None:
+        entry = {
+            "name": self.session.hunter.name,
+            "difficulty": self.session.difficulty.value,
+            "level": self.session.hunter.level,
+            "score": self.session.score,
+            "enemies_defeated": self.session.enemies_defeated,
+            "treasures": self.session.discovered_treasures,
+            "victory": self.session.victory,
+        }
+        leaderboard = load_leaderboard(self.leaderboard_path)
+        leaderboard.append(entry)
+        leaderboard.sort(
+            key=lambda e: (
+                int(e.get("score", 0)),
+                int(e.get("level", 0)),
+            ),
+            reverse=True,
+        )
+        leaderboard = leaderboard[:10]
+        save_leaderboard(self.leaderboard_path, leaderboard)
 
     def save_game(self) -> None:
         payload = self._serialize_session()
@@ -1165,6 +1195,42 @@ def build_save_slot_table(
             summary.level,
             summary.score,
             summary.objective,
+        )
+    return table
+
+
+def load_leaderboard(path: Path) -> list[dict[str, Any]]:
+    if not path.exists():
+        return []
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+        if isinstance(data, list):
+            return [entry for entry in data if isinstance(entry, dict)]
+        return []
+    except (OSError, json.JSONDecodeError, TypeError, ValueError):
+        return []
+
+
+def save_leaderboard(path: Path, entries: list[dict[str, Any]]) -> None:
+    path.write_text(json.dumps(entries, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def build_leaderboard_table(entries: list[dict[str, Any]]) -> Table:
+    table = Table(title="Ranking local", expand=True)
+    table.add_column("#")
+    table.add_column("Jugador")
+    table.add_column("Dif.")
+    table.add_column("Nivel")
+    table.add_column("Puntaje")
+    table.add_column("Estado")
+    for idx, entry in enumerate(entries, start=1):
+        table.add_row(
+            str(idx),
+            str(entry.get("name", "-")),
+            str(entry.get("difficulty", "-")),
+            str(entry.get("level", "-")),
+            str(entry.get("score", "-")),
+            "Victoria" if bool(entry.get("victory", False)) else "Derrota",
         )
     return table
 

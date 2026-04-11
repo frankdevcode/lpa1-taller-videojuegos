@@ -10,6 +10,8 @@ from game.app import (
     Difficulty,
     build_save_slot_path,
     list_save_slot_summaries,
+    load_leaderboard,
+    save_leaderboard,
 )
 from game.models import (
     Armor,
@@ -287,3 +289,20 @@ def test_list_save_slot_summaries_detects_existing_slot(
 
     assert len(summaries) == 3
     assert summaries[0].exists is True
+
+
+def test_leaderboard_persists_and_sorts_by_score(tmp_path: Path) -> None:
+    lb_path = tmp_path / "leaderboard.json"
+    entries = [
+        {"name": "A", "difficulty": "explorador", "level": 2, "score": 100, "victory": False},
+        {"name": "B", "difficulty": "cazador", "level": 3, "score": 200, "victory": True},
+        {"name": "C", "difficulty": "leyenda", "level": 1, "score": 150, "victory": False},
+    ]
+    save_leaderboard(lb_path, entries)
+
+    loaded = load_leaderboard(lb_path)
+    loaded.sort(key=lambda e: (int(e.get("score", 0)), int(e.get("level", 0))), reverse=True)
+
+    assert loaded[0]["name"] == "B"
+    assert loaded[1]["name"] == "C"
+    assert loaded[2]["name"] == "A"
