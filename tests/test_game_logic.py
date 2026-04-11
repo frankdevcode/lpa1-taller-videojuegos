@@ -170,8 +170,23 @@ def test_boss_unlock_requires_level_and_exploration() -> None:
     assert app.session.boss_unlocked is True
 
 
-def test_boss_defeat_ends_the_game_with_victory() -> None:
-    app = BeastHunterApp(Difficulty.EXPLORADOR)
+def test_boss_unlock_requires_more_defeats_on_legend_difficulty() -> None:
+    app = BeastHunterApp(Difficulty.LEYENDA)
+    app.session.hunter.level = 3
+    for tile in app.session.world.tiles.values():
+        tile.explored = True
+
+    app.session.enemies_defeated = 2
+    app._refresh_boss_unlock()
+    assert app.session.boss_unlocked is False
+
+    app.session.enemies_defeated = 3
+    app._refresh_boss_unlock()
+    assert app.session.boss_unlocked is True
+
+
+def test_boss_defeat_ends_the_game_with_victory(tmp_path: Path) -> None:
+    app = BeastHunterApp(Difficulty.EXPLORADOR, leaderboard_path=tmp_path / "leaderboard.json")
     boss = app.session.world.boss_tile().enemy
 
     assert boss is not None
@@ -180,6 +195,20 @@ def test_boss_defeat_ends_the_game_with_victory() -> None:
 
     assert app.session.victory is True
     assert app.session.game_over is True
+
+
+def test_boss_defeat_writes_leaderboard_entry(tmp_path: Path) -> None:
+    lb_path = tmp_path / "leaderboard.json"
+    app = BeastHunterApp(Difficulty.EXPLORADOR, leaderboard_path=lb_path)
+    boss = app.session.world.boss_tile().enemy
+
+    assert boss is not None
+
+    app._resolve_enemy_defeat(boss)
+
+    loaded = load_leaderboard(lb_path)
+    assert len(loaded) == 1
+    assert loaded[0]["victory"] is True
 
 
 def test_achievements_unlock_from_progression() -> None:

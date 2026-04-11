@@ -48,6 +48,10 @@ class DifficultyConfig:
     enemy_health_bonus: int
     enemy_attack_bonus: int
     starting_gold: int
+    reward_multiplier: float
+    healing_multiplier: float
+    boss_unlock_exploration_ratio: float
+    boss_unlock_defeats_required: int
 
 
 @dataclass(frozen=True, slots=True)
@@ -73,18 +77,30 @@ DIFFICULTY_CONFIG = {
         enemy_health_bonus=0,
         enemy_attack_bonus=0,
         starting_gold=30,
+        reward_multiplier=1.0,
+        healing_multiplier=1.0,
+        boss_unlock_exploration_ratio=0.5,
+        boss_unlock_defeats_required=1,
     ),
     Difficulty.CAZADOR: DifficultyConfig(
         label="Cazador",
         enemy_health_bonus=4,
         enemy_attack_bonus=1,
         starting_gold=20,
+        reward_multiplier=1.1,
+        healing_multiplier=0.95,
+        boss_unlock_exploration_ratio=0.6,
+        boss_unlock_defeats_required=2,
     ),
     Difficulty.LEYENDA: DifficultyConfig(
         label="Leyenda",
         enemy_health_bonus=8,
         enemy_attack_bonus=3,
         starting_gold=10,
+        reward_multiplier=1.25,
+        healing_multiplier=0.9,
+        boss_unlock_exploration_ratio=0.7,
+        boss_unlock_defeats_required=3,
     ),
 }
 
@@ -101,7 +117,8 @@ HELP_TOPICS = {
     "movimiento": "Usa n, s, e y o para explorar el bosque casilla por casilla.",
     "combate": "Usa atacar para dañar, defender para resistir y trampa para castigar enemigos.",
     "progreso": (
-        "Sube de nivel, explora el bosque y alcanza nivel 3 para abrir la guarida alfa."
+        "Sube a nivel 3, derrota enemigos y explora suficiente bosque "
+        "para abrir la guarida alfa."
     ),
     "comercio": (
         "Compra y vende en campamentos o puestos. "
@@ -453,6 +470,9 @@ class BeastHunterApp:
             return
 
         hunter_damage = calculate_damage(self.session.hunter, enemy)
+        if self.rng.random() < 0.1:
+            hunter_damage *= 2
+            self.session.log("Golpe crítico.")
         applied_to_enemy = enemy.receive_damage(hunter_damage)
         self.session.log(f"Golpeas a {enemy.name} e infliges {applied_to_enemy} de daño.")
         self.session.hunter.reset_guard()
@@ -501,7 +521,9 @@ class BeastHunterApp:
         if healing_item is None:
             self.session.log("No tienes consumibles de curación disponibles.")
             return
-        recovered = hunter.heal(healing_item.heal_amount)
+        config = DIFFICULTY_CONFIG[self.session.difficulty]
+        heal_amount = max(1, round(healing_item.heal_amount * config.healing_multiplier))
+        recovered = hunter.heal(heal_amount)
         if recovered == 0:
             self.session.log("Ya estás en plena forma. Guardas el consumible para más adelante.")
             hunter.add_item(healing_item)
@@ -676,26 +698,30 @@ class BeastHunterApp:
         if not leaderboard:
             self.session.log("Todavía no hay registros en el ranking local.")
             return
-        self.console.print(
-            build_leaderboard_table(
-                leaderboard[:10],
-                title="Ranking local - Top 10",
-            )
+        view = Prompt.ask(
+            "Vista de ranking",
+            choices=["general", "victorias", "derrotas", "dificultad"],
+            default="general",
+            show_choices=False,
         )
-        difficulty = self.session.difficulty.value
-        filtered = [
-            entry
-            for entry in leaderboard
-            if str(entry.get("difficulty", "")) == difficulty
-        ]
-        if filtered:
-            self.console.print(
-                build_leaderboard_table(
-                    filtered[:10],
-                    title=f"Ranking - {difficulty.capitalize()}",
-                )
-            )
-        self.session.log("Ranking mostrado.")
+        entries = leaderboard
+        title = "Ranking local - Top 10"
+        if view == "victorias":
+            entries = [entry for entry in leaderboard if bool(entry.get("victory", False))]
+            title = "Ranking - Victorias"
+        elif view == "derrotas":
+            entries = [entry for entry in leaderboard if not bool(entry.get("victory", False))]
+            title = "Ranking - Derrotas"
+        elif view == "dificultad":
+            difficulty = self.session.difficulty.value
+            entries = [
+                entry
+                for entry in leaderboard
+                if str(entry.get("difficulty", "")) == difficulty
+            ]
+            title = f"Ranking - {difficulty.capitalize()}"
+        self.console.print(build_leaderboard_table(entries[:10], title=title))
+        self.session.log(f"Ranking mostrado: {view}.")
 
     def _context_hint(self) -> str:
         tile = self.session.world.tile_at(self.session.position)
@@ -733,18 +759,10 @@ class BeastHunterApp:
         return "Desbloquear guarida alfa"
 
     def _boss_unlock_requirements_met(self) -> bool:
+        config = DIFFICULTY_CONFIG[self.session.difficulty]
         explored, total = self.session.world.exploration_progress()
-        exploration_ratio = {
-            Difficulty.EXPLORADOR: 0.5,
-            Difficulty.CAZADOR: 0.6,
-            Difficulty.LEYENDA: 0.7,
-        }[self.session.difficulty]
-        required_tiles = max(1, int(total * exploration_ratio))
-        required_defeats = {
-            Difficulty.EXPLORADOR: 1,
-            Difficulty.CAZADOR: 2,
-            Difficulty.LEYENDA: 3,
-        }[self.session.difficulty]
+        required_tiles = max(1, int(total * config.boss_unlock_exploration_ratio))
+        required_defeats = config.boss_unlock_defeats_required
         return (
             self.session.hunter.level >= 3
             and explored >= required_tiles
@@ -765,12 +783,16 @@ class BeastHunterApp:
 
     def _resolve_enemy_defeat(self, enemy: Enemy) -> None:
         self.session.enemies_defeated += 1
-        self._award_score(enemy.reward_experience + enemy.reward_gold, f"Vences a {enemy.name}.")
-        self.session.hunter.gold += enemy.reward_gold
-        for message in self.session.hunter.gain_experience(enemy.reward_experience):
+        config = DIFFICULTY_CONFIG[self.session.difficulty]
+        reward_experience = max(1, round(enemy.reward_experience * config.reward_multiplier))
+        reward_gold = max(1, round(enemy.reward_gold * config.reward_multiplier))
+        reward_score = reward_experience + reward_gold
+        self._award_score(reward_score, f"Vences a {enemy.name}.")
+        self.session.hunter.gold += reward_gold
+        for message in self.session.hunter.gain_experience(reward_experience):
             self.session.log(message)
         self._evaluate_achievements()
-        self.session.log(f"Derrotas a {enemy.name} y obtienes {enemy.reward_gold} monedas.")
+        self.session.log(f"Derrotas a {enemy.name} y obtienes {reward_gold} monedas.")
         if enemy.is_boss:
             self._unlock_achievement("forest_legend")
             self.session.game_over = True
