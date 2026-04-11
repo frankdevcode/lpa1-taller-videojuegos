@@ -2,13 +2,15 @@ from __future__ import annotations
 
 import random
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from enum import StrEnum
 
 from .models import (
     Armor,
     Direction,
     Enemy,
     EnemyType,
+    Item,
     Position,
     Trap,
     Treasure,
@@ -27,6 +29,12 @@ class EnemyBlueprint:
     gold: int
 
 
+class ZoneType(StrEnum):
+    BOSQUE = "bosque salvaje"
+    CAMPAMENTO = "campamento"
+    PUESTO = "puesto avanzado"
+
+
 @dataclass(slots=True)
 class Tile:
     position: Position
@@ -34,13 +42,25 @@ class Tile:
     explored: bool = False
     enemy: Enemy | None = None
     item: Treasure | Trap | Weapon | Armor | None = None
+    zone_type: ZoneType = ZoneType.BOSQUE
+    rest_available: bool = False
+    shop_inventory: list[Item] = field(default_factory=list)
 
 
 class ForestMap:
-    def __init__(self, width: int, height: int, rng: random.Random) -> None:
+    def __init__(
+        self,
+        width: int,
+        height: int,
+        rng: random.Random,
+        enemy_health_bonus: int = 0,
+        enemy_attack_bonus: int = 0,
+    ) -> None:
         self.width = width
         self.height = height
         self.rng = rng
+        self.enemy_health_bonus = enemy_health_bonus
+        self.enemy_attack_bonus = enemy_attack_bonus
         self.start_position = Position(width // 2, height // 2)
         self.tiles = self._generate_tiles()
 
@@ -71,6 +91,7 @@ class ForestMap:
                 tile.enemy = self._create_enemy()
             elif roll < 0.85:
                 tile.item = self._create_item()
+        self._configure_special_tiles(tiles)
         return tiles
 
     def _create_enemy(self) -> Enemy:
@@ -106,9 +127,9 @@ class ForestMap:
         blueprint = self.rng.choice(blueprints)
         return Enemy(
             name=blueprint.name,
-            max_health=blueprint.health,
-            current_health=blueprint.health,
-            base_attack=blueprint.attack,
+            max_health=blueprint.health + self.enemy_health_bonus,
+            current_health=blueprint.health + self.enemy_health_bonus,
+            base_attack=blueprint.attack + self.enemy_attack_bonus,
             base_defense=blueprint.defense,
             enemy_type=blueprint.enemy_type,
             reward_experience=blueprint.experience,
@@ -129,6 +150,34 @@ class ForestMap:
             lambda: Armor(name="Capa reforzada", value=55, defense_bonus=3),
         )
         return self.rng.choice(item_factories)()
+
+    def _configure_special_tiles(self, tiles: dict[Position, Tile]) -> None:
+        start_tile = tiles[self.start_position]
+        start_tile.terrain_name = "Campamento del gremio"
+        start_tile.zone_type = ZoneType.CAMPAMENTO
+        start_tile.rest_available = True
+        start_tile.shop_inventory = self._create_shop_inventory()
+        start_tile.enemy = None
+        start_tile.item = None
+
+        outpost_candidates = [position for position in tiles if position != self.start_position]
+        outpost_position = self.rng.choice(outpost_candidates)
+        outpost_tile = tiles[outpost_position]
+        outpost_tile.terrain_name = "Puesto del guardabosques"
+        outpost_tile.zone_type = ZoneType.PUESTO
+        outpost_tile.rest_available = True
+        outpost_tile.shop_inventory = self._create_shop_inventory()
+        outpost_tile.enemy = None
+        outpost_tile.item = None
+
+    def _create_shop_inventory(self) -> list[Item]:
+        return [
+            Weapon(name="Arco de fresno", value=75, attack_bonus=5),
+            Weapon(name="Lanza pesada", value=95, attack_bonus=7),
+            Armor(name="Armadura de cuero", value=70, defense_bonus=4),
+            Armor(name="Manto del veterano", value=92, defense_bonus=6),
+            Trap(name="Carga de pólvora", value=40, explosion_range=2, explosion_damage=24),
+        ]
 
     def tile_at(self, position: Position) -> Tile:
         return self.tiles[position]

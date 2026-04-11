@@ -27,6 +27,12 @@ class Item:
     name: str
     value: int
 
+    def buy_price(self) -> int:
+        return self.value
+
+    def sell_price(self) -> int:
+        return max(1, self.value // 2)
+
 
 @dataclass(slots=True)
 class Treasure(Item):
@@ -112,24 +118,36 @@ class Hunter(Character):
     def add_item(self, item: Item) -> None:
         self.inventory.append(item)
 
-    def auto_equip(self, item: Item) -> str | None:
-        if isinstance(item, Weapon):
-            should_equip = (
-                self.equipped_weapon is None
-                or item.attack_bonus > self.equipped_weapon.attack_bonus
-            )
-            if should_equip:
-                self.equipped_weapon = item
-                return f"Equipada arma {item.name} (+{item.attack_bonus} ATQ)."
-        if isinstance(item, Armor):
-            should_equip = (
-                self.equipped_armor is None
-                or item.defense_bonus > self.equipped_armor.defense_bonus
-            )
-            if should_equip:
-                self.equipped_armor = item
-                return f"Equipada defensa {item.name} (+{item.defense_bonus} DEF)."
-        return None
+    def weapons(self) -> list[Weapon]:
+        return [item for item in self.inventory if isinstance(item, Weapon)]
+
+    def armors(self) -> list[Armor]:
+        return [item for item in self.inventory if isinstance(item, Armor)]
+
+    def treasures(self) -> list[Treasure]:
+        return [item for item in self.inventory if isinstance(item, Treasure)]
+
+    def equip_weapon(self, weapon: Weapon) -> str:
+        if weapon not in self.inventory:
+            return "No puedes equipar un arma que no está en tu inventario."
+        self.equipped_weapon = weapon
+        return f"Equipada arma {weapon.name} (+{weapon.attack_bonus} ATQ)."
+
+    def equip_armor(self, armor: Armor) -> str:
+        if armor not in self.inventory:
+            return "No puedes equipar una defensa que no está en tu inventario."
+        self.equipped_armor = armor
+        return f"Equipada defensa {armor.name} (+{armor.defense_bonus} DEF)."
+
+    def sell_item(self, item: Item) -> int:
+        self.inventory.remove(item)
+        if self.equipped_weapon is item:
+            self.equipped_weapon = None
+        if self.equipped_armor is item:
+            self.equipped_armor = None
+        sale_price = item.sell_price()
+        self.gold += sale_price
+        return sale_price
 
     def trap_count(self) -> int:
         return sum(isinstance(item, Trap) for item in self.inventory)

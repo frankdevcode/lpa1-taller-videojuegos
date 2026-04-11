@@ -1,7 +1,7 @@
 import random
 
-from game.models import Enemy, EnemyType, Hunter, calculate_damage
-from game.world import ForestMap
+from game.models import Armor, Enemy, EnemyType, Hunter, Weapon, calculate_damage
+from game.world import ForestMap, ZoneType
 
 
 def test_damage_is_never_lower_than_one() -> None:
@@ -46,6 +46,9 @@ def test_forest_map_marks_start_tile_as_explored() -> None:
     start_tile = world.tile_at(world.start_position)
 
     assert start_tile.explored is True
+    assert start_tile.zone_type is ZoneType.CAMPAMENTO
+    assert start_tile.rest_available is True
+    assert len(start_tile.shop_inventory) > 0
 
 
 def test_forest_map_progress_matches_grid_size() -> None:
@@ -55,3 +58,43 @@ def test_forest_map_progress_matches_grid_size() -> None:
 
     assert explored == 1
     assert total == 12
+
+
+def test_hunter_can_equip_items_manually() -> None:
+    hunter = Hunter(
+        name="Aren",
+        max_health=50,
+        current_health=50,
+        base_attack=8,
+        base_defense=5,
+    )
+    weapon = Weapon(name="Arco largo", value=60, attack_bonus=4)
+    armor = Armor(name="Coraza ligera", value=50, defense_bonus=3)
+
+    hunter.add_item(weapon)
+    hunter.add_item(armor)
+
+    hunter.equip_weapon(weapon)
+    hunter.equip_armor(armor)
+
+    assert hunter.total_attack() == 12
+    assert hunter.total_defense() == 8
+
+
+def test_selling_equipped_item_removes_equipment_and_grants_gold() -> None:
+    hunter = Hunter(
+        name="Aren",
+        max_health=50,
+        current_health=50,
+        base_attack=8,
+        base_defense=5,
+    )
+    weapon = Weapon(name="Lanza corta", value=80, attack_bonus=5)
+    hunter.add_item(weapon)
+    hunter.equip_weapon(weapon)
+
+    sale_price = hunter.sell_item(weapon)
+
+    assert sale_price == 40
+    assert hunter.gold == 40
+    assert hunter.equipped_weapon is None
