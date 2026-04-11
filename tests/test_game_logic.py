@@ -1,4 +1,5 @@
 import random
+from pathlib import Path
 
 from game.app import BeastHunterApp, Difficulty
 from game.models import (
@@ -189,3 +190,41 @@ def test_award_score_increases_session_score() -> None:
     app._award_score(25, "Prueba de puntaje.")
 
     assert app.session.score == 25
+
+
+def test_save_and_load_restore_core_session_state(tmp_path: Path) -> None:
+    save_path = tmp_path / "savegame.json"
+    app = BeastHunterApp(Difficulty.EXPLORADOR, save_path=save_path)
+    weapon = Weapon(name="Arco ritual", value=120, attack_bonus=9)
+
+    app.session.position = app.session.world.boss_position
+    app.session.hunter.add_item(weapon)
+    app.session.hunter.equip_weapon(weapon)
+    app.session.score = 240
+    app.session.items_bought = 2
+    app.session.items_sold = 1
+    app.session.discovered_treasures = 4
+    app.session.achievements = ["Primera sangre", "Rastreador alfa"]
+    app.session.boss_unlocked = True
+    app.session.world.boss_tile().explored = True
+
+    app.save_game()
+
+    loaded_app = BeastHunterApp(Difficulty.LEYENDA, save_path=save_path)
+    loaded = loaded_app.load_saved_game()
+
+    assert loaded is True
+    assert loaded_app.session.position == app.session.position
+    assert loaded_app.session.score == 240
+    assert loaded_app.session.boss_unlocked is True
+    assert loaded_app.session.achievements == ["Primera sangre", "Rastreador alfa"]
+    assert loaded_app.session.hunter.equipped_weapon is not None
+    assert loaded_app.session.hunter.equipped_weapon.name == "Arco ritual"
+
+
+def test_load_saved_game_returns_false_when_file_does_not_exist(tmp_path: Path) -> None:
+    app = BeastHunterApp(Difficulty.EXPLORADOR, save_path=tmp_path / "missing-save.json")
+
+    loaded = app.load_saved_game()
+
+    assert loaded is False

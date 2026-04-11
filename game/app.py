@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import json
 import random
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 from enum import StrEnum
-from typing import TypeVar
+from pathlib import Path
+from typing import Any, TypeVar
 
 from rich.console import Console
 from rich.panel import Panel
@@ -15,10 +17,12 @@ from .models import (
     Armor,
     Direction,
     Enemy,
+    EnemyType,
     Hunter,
     Item,
     Position,
     Trap,
+    Treasure,
     Weapon,
     calculate_damage,
     calculate_enemy_damage,
@@ -26,6 +30,7 @@ from .models import (
 from .world import ForestMap, Tile, ZoneType
 
 SelectableItem = TypeVar("SelectableItem", bound=Item)
+DEFAULT_SAVE_PATH = Path(__file__).resolve().parent.parent / "savegame.json"
 
 
 class Difficulty(StrEnum):
@@ -102,9 +107,14 @@ class GameSession:
 
 
 class BeastHunterApp:
-    def __init__(self, difficulty: Difficulty = Difficulty.CAZADOR) -> None:
+    def __init__(
+        self,
+        difficulty: Difficulty = Difficulty.CAZADOR,
+        save_path: Path = DEFAULT_SAVE_PATH,
+    ) -> None:
         self.console = Console()
         self.rng = random.Random()
+        self.save_path = save_path
         self.session = self._create_session(difficulty)
 
     def _create_session(self, difficulty: Difficulty) -> GameSession:
@@ -154,6 +164,8 @@ class BeastHunterApp:
                     "equipar",
                     "tienda",
                     "descansar",
+                    "guardar",
+                    "cargar",
                     "salir",
                 ],
                 default="n",
@@ -183,7 +195,7 @@ class BeastHunterApp:
                 "Vertical slice profesional del proyecto: "
                 "exploración, combate, progresión y jefe final.\n"
                 "Comandos: n, s, e, o, atacar, defender, trampa, inventario, "
-                "equipar, tienda, descansar, salir",
+                "equipar, tienda, descansar, guardar, cargar, salir",
                 title="Inicio de Partida",
                 border_style="green",
             )
@@ -301,6 +313,8 @@ class BeastHunterApp:
             "equipar": self._manage_equipment,
             "tienda": self._open_shop,
             "descansar": self._rest,
+            "guardar": self.save_game,
+            "cargar": self.load_game,
             "salir": self._quit_game,
         }
         action = actions[command]
@@ -616,6 +630,255 @@ class BeastHunterApp:
         if self.session.items_bought >= 1 and self.session.items_sold >= 1:
             self._unlock_achievement("guild_merchant")
 
+    def save_game(self) -> None:
+        payload = self._serialize_session()
+        self.save_path.write_text(
+            json.dumps(payload, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+        self.session.log(f"Partida guardada en {self.save_path.name}.")
+
+    def load_game(self) -> None:
+        if not self.save_path.exists():
+            self.session.log("No existe una partida guardada disponible.")
+            return
+        data = json.loads(self.save_path.read_text(encoding="utf-8"))
+        self.session = self._deserialize_session(data)
+        self.session.log(f"Partida cargada desde {self.save_path.name}.")
+
+    def load_saved_game(self) -> bool:
+        if not self.save_path.exists():
+            return False
+        data = json.loads(self.save_path.read_text(encoding="utf-8"))
+        self.session = self._deserialize_session(data)
+        self.session.log(f"Partida cargada desde {self.save_path.name}.")
+        return True
+
+    def _serialize_session(self) -> dict[str, Any]:
+        inventory = self.session.hunter.inventory
+        return {
+            "difficulty": self.session.difficulty.value,
+            "position": self._serialize_position(self.session.position),
+            "boss_unlocked": self.session.boss_unlocked,
+            "enemies_defeated": self.session.enemies_defeated,
+            "score": self.session.score,
+            "items_bought": self.session.items_bought,
+            "items_sold": self.session.items_sold,
+            "discovered_treasures": self.session.discovered_treasures,
+            "achievements": list(self.session.achievements),
+            "event_log": list(self.session.event_log),
+            "game_over": self.session.game_over,
+            "victory": self.session.victory,
+            "hunter": {
+                "name": self.session.hunter.name,
+                "max_health": self.session.hunter.max_health,
+                "current_health": self.session.hunter.current_health,
+                "base_attack": self.session.hunter.base_attack,
+                "base_defense": self.session.hunter.base_defense,
+                "guard_bonus": self.session.hunter.guard_bonus,
+                "level": self.session.hunter.level,
+                "experience": self.session.hunter.experience,
+                "gold": self.session.hunter.gold,
+                "inventory": [self._serialize_item(item) for item in inventory],
+                "equipped_weapon_index": self._inventory_index(
+                    inventory,
+                    self.session.hunter.equipped_weapon,
+                ),
+                "equipped_armor_index": self._inventory_index(
+                    inventory,
+                    self.session.hunter.equipped_armor,
+                ),
+            },
+            "world": {
+                "width": self.session.world.width,
+                "height": self.session.world.height,
+                "enemy_health_bonus": self.session.world.enemy_health_bonus,
+                "enemy_attack_bonus": self.session.world.enemy_attack_bonus,
+                "tiles": [
+                    {
+                        "position": self._serialize_position(tile.position),
+                        "terrain_name": tile.terrain_name,
+                        "explored": tile.explored,
+                        "enemy": self._serialize_enemy(tile.enemy),
+                        "item": self._serialize_item(tile.item),
+                        "zone_type": tile.zone_type.value,
+                        "rest_available": tile.rest_available,
+                        "shop_inventory": [
+                            self._serialize_item(item) for item in tile.shop_inventory
+                        ],
+                    }
+                    for tile in self.session.world.tiles.values()
+                ],
+            },
+        }
+
+    def _deserialize_session(self, data: dict[str, Any]) -> GameSession:
+        world_data = data["world"]
+        world = ForestMap(
+            width=int(world_data["width"]),
+            height=int(world_data["height"]),
+            rng=self.rng,
+            enemy_health_bonus=int(world_data["enemy_health_bonus"]),
+            enemy_attack_bonus=int(world_data["enemy_attack_bonus"]),
+        )
+        for tile_data in world_data["tiles"]:
+            tile = world.tile_at(self._deserialize_position(tile_data["position"]))
+            tile.terrain_name = str(tile_data["terrain_name"])
+            tile.explored = bool(tile_data["explored"])
+            tile.enemy = self._deserialize_enemy(tile_data["enemy"])
+            tile_item = self._deserialize_item(tile_data["item"])
+            if isinstance(tile_item, (Treasure, Trap, Weapon, Armor)) or tile_item is None:
+                tile.item = tile_item
+            tile.zone_type = ZoneType(str(tile_data["zone_type"]))
+            tile.rest_available = bool(tile_data["rest_available"])
+            tile.shop_inventory = [
+                item
+                for item in (
+                    self._deserialize_item(item_data)
+                    for item_data in tile_data["shop_inventory"]
+                )
+                if item is not None
+            ]
+
+        hunter_data = data["hunter"]
+        inventory = [
+            item
+            for item in (
+                self._deserialize_item(item_data) for item_data in hunter_data["inventory"]
+            )
+            if item is not None
+        ]
+        hunter = Hunter(
+            name=str(hunter_data["name"]),
+            max_health=int(hunter_data["max_health"]),
+            current_health=int(hunter_data["current_health"]),
+            base_attack=int(hunter_data["base_attack"]),
+            base_defense=int(hunter_data["base_defense"]),
+            guard_bonus=int(hunter_data["guard_bonus"]),
+            level=int(hunter_data["level"]),
+            experience=int(hunter_data["experience"]),
+            gold=int(hunter_data["gold"]),
+            inventory=inventory,
+        )
+        weapon_index = hunter_data["equipped_weapon_index"]
+        armor_index = hunter_data["equipped_armor_index"]
+        if weapon_index is not None:
+            weapon_item = inventory[int(weapon_index)]
+            if isinstance(weapon_item, Weapon):
+                hunter.equipped_weapon = weapon_item
+        if armor_index is not None:
+            armor_item = inventory[int(armor_index)]
+            if isinstance(armor_item, Armor):
+                hunter.equipped_armor = armor_item
+
+        return GameSession(
+            hunter=hunter,
+            world=world,
+            position=self._deserialize_position(data["position"]),
+            difficulty=Difficulty(str(data["difficulty"])),
+            boss_unlocked=bool(data["boss_unlocked"]),
+            enemies_defeated=int(data["enemies_defeated"]),
+            score=int(data["score"]),
+            items_bought=int(data["items_bought"]),
+            items_sold=int(data["items_sold"]),
+            discovered_treasures=int(data["discovered_treasures"]),
+            achievements=[str(name) for name in data["achievements"]],
+            event_log=[str(entry) for entry in data["event_log"]],
+            game_over=bool(data["game_over"]),
+            victory=bool(data["victory"]),
+        )
+
+    def _serialize_position(self, position: Position) -> dict[str, int]:
+        return {"x": position.x, "y": position.y}
+
+    def _deserialize_position(self, data: dict[str, Any]) -> Position:
+        return Position(x=int(data["x"]), y=int(data["y"]))
+
+    def _serialize_item(self, item: Item | None) -> dict[str, Any] | None:
+        if item is None:
+            return None
+        payload: dict[str, Any] = {"name": item.name, "value": item.value}
+        if isinstance(item, Weapon):
+            payload["kind"] = "weapon"
+            payload["attack_bonus"] = item.attack_bonus
+            return payload
+        if isinstance(item, Armor):
+            payload["kind"] = "armor"
+            payload["defense_bonus"] = item.defense_bonus
+            return payload
+        if isinstance(item, Trap):
+            payload["kind"] = "trap"
+            payload["explosion_range"] = item.explosion_range
+            payload["explosion_damage"] = item.explosion_damage
+            return payload
+        payload["kind"] = "treasure"
+        return payload
+
+    def _deserialize_item(self, data: dict[str, Any] | None) -> Item | None:
+        if data is None:
+            return None
+        kind = str(data["kind"])
+        if kind == "weapon":
+            return Weapon(
+                name=str(data["name"]),
+                value=int(data["value"]),
+                attack_bonus=int(data["attack_bonus"]),
+            )
+        if kind == "armor":
+            return Armor(
+                name=str(data["name"]),
+                value=int(data["value"]),
+                defense_bonus=int(data["defense_bonus"]),
+            )
+        if kind == "trap":
+            return Trap(
+                name=str(data["name"]),
+                value=int(data["value"]),
+                explosion_range=int(data["explosion_range"]),
+                explosion_damage=int(data["explosion_damage"]),
+            )
+        return Treasure(name=str(data["name"]), value=int(data["value"]))
+
+    def _serialize_enemy(self, enemy: Enemy | None) -> dict[str, Any] | None:
+        if enemy is None:
+            return None
+        return {
+            "name": enemy.name,
+            "max_health": enemy.max_health,
+            "current_health": enemy.current_health,
+            "base_attack": enemy.base_attack,
+            "base_defense": enemy.base_defense,
+            "guard_bonus": enemy.guard_bonus,
+            "enemy_type": enemy.enemy_type.value,
+            "reward_experience": enemy.reward_experience,
+            "reward_gold": enemy.reward_gold,
+            "is_boss": enemy.is_boss,
+        }
+
+    def _deserialize_enemy(self, data: dict[str, Any] | None) -> Enemy | None:
+        if data is None:
+            return None
+        return Enemy(
+            name=str(data["name"]),
+            max_health=int(data["max_health"]),
+            current_health=int(data["current_health"]),
+            base_attack=int(data["base_attack"]),
+            base_defense=int(data["base_defense"]),
+            guard_bonus=int(data["guard_bonus"]),
+            enemy_type=EnemyType(str(data["enemy_type"])),
+            reward_experience=int(data["reward_experience"]),
+            reward_gold=int(data["reward_gold"]),
+            is_boss=bool(data["is_boss"]),
+        )
+
+    def _inventory_index(self, inventory: list[Item], equipped: Item | None) -> int | None:
+        if equipped is None:
+            return None
+        for index, item in enumerate(inventory):
+            if item is equipped:
+                return index
+        return None
+
     def _print_item_selection(
         self,
         title: str,
@@ -687,10 +950,25 @@ class BeastHunterApp:
 
 
 def run() -> None:
+    if DEFAULT_SAVE_PATH.exists():
+        start_mode = Prompt.ask(
+            "Inicio",
+            choices=["continuar", "nueva"],
+            default="continuar",
+            show_choices=False,
+        )
+        if start_mode == "continuar":
+            app = BeastHunterApp(save_path=DEFAULT_SAVE_PATH)
+            if app.load_saved_game():
+                app.run()
+                return
     selected_difficulty = Prompt.ask(
         "Elige dificultad",
         choices=[difficulty.value for difficulty in Difficulty],
         default=Difficulty.CAZADOR.value,
         show_choices=False,
     )
-    BeastHunterApp(difficulty=Difficulty(selected_difficulty)).run()
+    BeastHunterApp(
+        difficulty=Difficulty(selected_difficulty),
+        save_path=DEFAULT_SAVE_PATH,
+    ).run()
