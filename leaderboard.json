@@ -16,5 +16,14 @@
     "enemies_defeated": 1,
     "treasures": 0,
     "victory": true
+  },
+  {
+    "name": "Aren, cazador del bosque",
+    "difficulty": "cazador",
+    "level": 1,
+    "score": 280,
+    "enemies_defeated": 2,
+    "treasures": 1,
+    "victory": false
   }
 ]

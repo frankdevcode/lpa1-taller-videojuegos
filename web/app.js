@@ -1,5 +1,11 @@
 const state = {
   view: null,
+  player: {
+    from: null,
+    to: null,
+    startedAt: 0,
+    durationMs: 140,
+  },
 };
 
 function qs(selector) {
@@ -86,18 +92,133 @@ function renderTile(view) {
 }
 
 function renderMap(view) {
-  const { width, grid } = view.map;
-  const mapEl = qs("#map");
-  mapEl.style.gridTemplateColumns = `repeat(${width}, 34px)`;
-  mapEl.innerHTML = "";
-  for (const row of grid) {
-    for (const cell of row) {
-      const div = document.createElement("div");
-      div.className = "map-cell";
-      div.textContent = cell;
-      mapEl.appendChild(div);
+  const canvas = qs("#gameCanvas");
+  const ctx = canvas.getContext("2d");
+  if (!ctx) {
+    return;
+  }
+
+  const { width, height, grid } = view.map;
+  const cellSize = Math.floor(Math.min(canvas.width / width, canvas.height / height));
+  const offsetX = Math.floor((canvas.width - cellSize * width) / 2);
+  const offsetY = Math.floor((canvas.height - cellSize * height) / 2);
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  for (let y = 0; y < height; y += 1) {
+    for (let x = 0; x < width; x += 1) {
+      const symbol = grid[y][x];
+      const rectX = offsetX + x * cellSize;
+      const rectY = offsetY + y * cellSize;
+
+      const baseColor = tileBaseColor(symbol, x, y);
+      ctx.fillStyle = baseColor;
+      ctx.fillRect(rectX, rectY, cellSize, cellSize);
+
+      ctx.strokeStyle = "rgba(38,49,90,0.9)";
+      ctx.strokeRect(rectX + 0.5, rectY + 0.5, cellSize - 1, cellSize - 1);
+
+      const overlay = tileOverlay(symbol);
+      if (overlay) {
+        ctx.font = `${Math.floor(cellSize * 0.6)}px system-ui`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillStyle = "rgba(232,238,252,0.95)";
+        ctx.fillText(overlay, rectX + cellSize / 2, rectY + cellSize / 2);
+      }
     }
   }
+
+  drawPlayer(ctx, view, cellSize, offsetX, offsetY);
+}
+
+function tileOverlay(symbol) {
+  if (symbol === "⚔" || symbol === "♛" || symbol === "⌂" || symbol === "✦") {
+    return symbol;
+  }
+  return "";
+}
+
+function tileBaseColor(symbol, x, y) {
+  if (symbol === "·") {
+    return "#071027";
+  }
+  if (symbol === "⌂") {
+    return "#131d3f";
+  }
+  if (symbol === "♛") {
+    return "#2b1733";
+  }
+  if (symbol === "⚔") {
+    return "#1b1431";
+  }
+  if (symbol === "✦") {
+    return "#111f2e";
+  }
+  if (symbol === "✓") {
+    return grassColor(x, y);
+  }
+  return grassColor(x, y);
+}
+
+function grassColor(x, y) {
+  const n = pseudoNoise(x, y);
+  const base = 26 + Math.floor(n * 12);
+  const r = 12;
+  const g = base;
+  const b = 24;
+  return `rgb(${r},${g},${b})`;
+}
+
+function pseudoNoise(x, y) {
+  const seed = (x * 9301 + y * 49297) % 233280;
+  return seed / 233280;
+}
+
+function drawPlayer(ctx, view, cellSize, offsetX, offsetY) {
+  const pos = view.status.position;
+  if (!pos) {
+    return;
+  }
+  const target = { x: pos.x, y: pos.y };
+  const now = performance.now();
+  const tween = state.player;
+
+  if (!tween.to || tween.to.x !== target.x || tween.to.y !== target.y) {
+    tween.from = tween.to ?? target;
+    tween.to = target;
+    tween.startedAt = now;
+  }
+
+  const progress = Math.min(1, (now - tween.startedAt) / tween.durationMs);
+  const eased = easeOutCubic(progress);
+  const from = tween.from ?? target;
+  const to = tween.to ?? target;
+  const drawX = from.x + (to.x - from.x) * eased;
+  const drawY = from.y + (to.y - from.y) * eased;
+
+  const centerX = offsetX + drawX * cellSize + cellSize / 2;
+  const centerY = offsetY + drawY * cellSize + cellSize / 2;
+  const radius = Math.max(6, Math.floor(cellSize * 0.22));
+
+  ctx.beginPath();
+  ctx.fillStyle = "#ffce6b";
+  ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.strokeStyle = "rgba(10,15,30,0.9)";
+  ctx.lineWidth = 2;
+  ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+  ctx.stroke();
+
+  if (progress < 1) {
+    requestAnimationFrame(() => renderMap(state.view));
+  }
+}
+
+function easeOutCubic(t) {
+  return 1 - Math.pow(1 - t, 3);
 }
 
 function renderLog(view) {
@@ -262,7 +383,87 @@ async function setup() {
     await doAction({ type: action });
   });
 
+  setupKeyboardControls();
+  setupCanvasClickMove();
   await refresh();
+}
+
+function setupKeyboardControls() {
+  window.addEventListener("keydown", async (event) => {
+    if (event.repeat) {
+      return;
+    }
+    const key = event.key.toLowerCase();
+    if (key === "arrowup" || key === "w") {
+      event.preventDefault();
+      await doAction({ type: "move", direction: "n" });
+      return;
+    }
+    if (key === "arrowdown" || key === "s") {
+      event.preventDefault();
+      await doAction({ type: "move", direction: "s" });
+      return;
+    }
+    if (key === "arrowleft" || key === "a") {
+      event.preventDefault();
+      await doAction({ type: "move", direction: "o" });
+      return;
+    }
+    if (key === "arrowright" || key === "d") {
+      event.preventDefault();
+      await doAction({ type: "move", direction: "e" });
+      return;
+    }
+    if (key === "enter") {
+      event.preventDefault();
+      await doAction({ type: "attack" });
+      return;
+    }
+    if (event.key === "Shift") {
+      event.preventDefault();
+      await doAction({ type: "defend" });
+      return;
+    }
+    if (key === "t") {
+      event.preventDefault();
+      await doAction({ type: "trap" });
+      return;
+    }
+    if (key === "u") {
+      event.preventDefault();
+      await doAction({ type: "use" });
+      return;
+    }
+  });
+}
+
+function setupCanvasClickMove() {
+  const canvas = qs("#gameCanvas");
+  canvas.addEventListener("click", async (event) => {
+    if (!state.view) {
+      return;
+    }
+    const rect = canvas.getBoundingClientRect();
+    const x = (event.clientX - rect.left) * (canvas.width / rect.width);
+    const y = (event.clientY - rect.top) * (canvas.height / rect.height);
+    const { width, height } = state.view.map;
+    const cellSize = Math.floor(Math.min(canvas.width / width, canvas.height / height));
+    const offsetX = Math.floor((canvas.width - cellSize * width) / 2);
+    const offsetY = Math.floor((canvas.height - cellSize * height) / 2);
+    const gridX = Math.floor((x - offsetX) / cellSize);
+    const gridY = Math.floor((y - offsetY) / cellSize);
+    if (gridX < 0 || gridX >= width || gridY < 0 || gridY >= height) {
+      return;
+    }
+    const pos = state.view.status.position;
+    const dx = gridX - pos.x;
+    const dy = gridY - pos.y;
+    if (Math.abs(dx) + Math.abs(dy) !== 1) {
+      return;
+    }
+    const direction = dx === 1 ? "e" : dx === -1 ? "o" : dy === 1 ? "s" : "n";
+    await doAction({ type: "move", direction });
+  });
 }
 
 setup().catch((error) => {

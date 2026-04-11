@@ -159,6 +159,7 @@ def build_view(game: BeastHunterApp) -> dict[str, Any]:
     return {
         "status": {
             "name": hunter.name,
+            "position": {"x": game.session.position.x, "y": game.session.position.y},
             "hp": hunter.current_health,
             "max_hp": hunter.max_health,
             "attack": hunter.total_attack(),
