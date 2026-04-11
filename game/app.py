@@ -31,6 +31,7 @@ from .world import ForestMap, Tile, ZoneType
 
 SelectableItem = TypeVar("SelectableItem", bound=Item)
 DEFAULT_SAVE_PATH = Path(__file__).resolve().parent.parent / "savegame.json"
+SAVE_SLOT_COUNT = 3
 
 
 class Difficulty(StrEnum):
@@ -51,6 +52,17 @@ class DifficultyConfig:
 class Achievement:
     name: str
     score_bonus: int
+
+
+@dataclass(frozen=True, slots=True)
+class SaveSlotSummary:
+    slot: int
+    exists: bool
+    label: str
+    difficulty: str
+    level: str
+    score: str
+    objective: str
 
 
 DIFFICULTY_CONFIG = {
@@ -126,10 +138,12 @@ class BeastHunterApp:
         self,
         difficulty: Difficulty = Difficulty.CAZADOR,
         save_path: Path = DEFAULT_SAVE_PATH,
+        active_slot: int | None = None,
     ) -> None:
         self.console = Console()
         self.rng = random.Random()
         self.save_path = save_path
+        self.active_slot = active_slot
         self.session = self._create_session(difficulty)
 
     def _create_session(self, difficulty: Difficulty) -> GameSession:
@@ -241,6 +255,7 @@ class BeastHunterApp:
         table.add_column("Puntaje")
         table.add_column("Exploración")
         table.add_column("Dificultad")
+        table.add_column("Slot")
         table.add_column("Objetivo")
         table.add_row(
             hunter.name,
@@ -253,6 +268,7 @@ class BeastHunterApp:
             str(self.session.score),
             f"{explored}/{total}",
             DIFFICULTY_CONFIG[self.session.difficulty].label,
+            self._slot_label(),
             self._objective_status(),
         )
         return table
@@ -333,7 +349,7 @@ class BeastHunterApp:
             "equipar": self._manage_equipment,
             "tienda": self._open_shop,
             "descansar": self._rest,
-            "guardar": self.save_game,
+            "guardar": self._save_game,
             "cargar": self.load_game,
             "tutorial": self._run_tutorial,
             "ayuda": self._show_help,
@@ -710,23 +726,39 @@ class BeastHunterApp:
             json.dumps(payload, ensure_ascii=False, indent=2),
             encoding="utf-8",
         )
-        self.session.log(f"Partida guardada en {self.save_path.name}.")
+        self.session.log(f"Partida guardada en {self._slot_label()}.")
+
+    def _save_game(self) -> None:
+        slot = self._prompt_slot_selection("Selecciona slot para guardar")
+        if slot is None:
+            self.session.log("Guardado cancelado.")
+            return
+        self.save_to_slot(slot)
 
     def load_game(self) -> None:
+        slot = self._prompt_slot_selection("Selecciona slot para cargar", existing_only=True)
+        if slot is None:
+            self.session.log("Carga cancelada.")
+            return
+        self._set_active_slot(slot)
         if not self.save_path.exists():
-            self.session.log("No existe una partida guardada disponible.")
+            self.session.log("No existe una partida guardada disponible en ese slot.")
             return
         data = json.loads(self.save_path.read_text(encoding="utf-8"))
         self.session = self._deserialize_session(data)
-        self.session.log(f"Partida cargada desde {self.save_path.name}.")
+        self.session.log(f"Partida cargada desde {self._slot_label()}.")
 
     def load_saved_game(self) -> bool:
         if not self.save_path.exists():
             return False
         data = json.loads(self.save_path.read_text(encoding="utf-8"))
         self.session = self._deserialize_session(data)
-        self.session.log(f"Partida cargada desde {self.save_path.name}.")
+        self.session.log(f"Partida cargada desde {self._slot_label()}.")
         return True
+
+    def save_to_slot(self, slot: int) -> None:
+        self._set_active_slot(slot)
+        self.save_game()
 
     def _serialize_session(self) -> dict[str, Any]:
         inventory = self.session.hunter.inventory
@@ -786,6 +818,40 @@ class BeastHunterApp:
                 ],
             },
         }
+
+    def _slot_label(self) -> str:
+        if self.active_slot is not None:
+            return f"slot {self.active_slot}"
+        return self.save_path.name
+
+    def _set_active_slot(self, slot: int) -> None:
+        self.active_slot = slot
+        self.save_path = build_save_slot_path(slot)
+
+    def _prompt_slot_selection(
+        self,
+        title: str,
+        existing_only: bool = False,
+    ) -> int | None:
+        summaries = list_save_slot_summaries()
+        self.console.print(build_save_slot_table(summaries, title))
+        valid_slots = [
+            str(summary.slot)
+            for summary in summaries
+            if summary.exists or not existing_only
+        ]
+        if not valid_slots:
+            return None
+        choices = [*valid_slots, "salir"]
+        selected = Prompt.ask(
+            title,
+            choices=choices,
+            default=valid_slots[0],
+            show_choices=False,
+        )
+        if selected == "salir":
+            return None
+        return int(selected)
 
     def _deserialize_session(self, data: dict[str, Any]) -> GameSession:
         world_data = data["world"]
@@ -1025,19 +1091,133 @@ class BeastHunterApp:
             self._refresh_boss_unlock()
 
 
-def run() -> None:
-    if DEFAULT_SAVE_PATH.exists():
-        start_mode = Prompt.ask(
-            "Inicio",
-            choices=["continuar", "nueva"],
-            default="continuar",
-            show_choices=False,
+def build_save_slot_path(slot: int) -> Path:
+    if slot == 1:
+        return DEFAULT_SAVE_PATH
+    return DEFAULT_SAVE_PATH.with_name(f"savegame_slot_{slot}.json")
+
+
+def read_save_slot_summary(slot: int) -> SaveSlotSummary:
+    save_path = build_save_slot_path(slot)
+    if not save_path.exists():
+        return SaveSlotSummary(
+            slot=slot,
+            exists=False,
+            label=f"Slot {slot}",
+            difficulty="-",
+            level="-",
+            score="-",
+            objective="Vacío",
         )
-        if start_mode == "continuar":
-            app = BeastHunterApp(save_path=DEFAULT_SAVE_PATH)
-            if app.load_saved_game():
-                app.run()
-                return
+    try:
+        data = json.loads(save_path.read_text(encoding="utf-8"))
+        hunter_data = data.get("hunter", {})
+        difficulty = str(data.get("difficulty", "-"))
+        level = str(hunter_data.get("level", "-"))
+        score = str(data.get("score", "-"))
+        victory = bool(data.get("victory", False))
+        boss_unlocked = bool(data.get("boss_unlocked", False))
+        objective = "Victoria" if victory else (
+            "Guarida abierta" if boss_unlocked else "En progreso"
+        )
+        return SaveSlotSummary(
+            slot=slot,
+            exists=True,
+            label=f"Slot {slot}",
+            difficulty=difficulty,
+            level=level,
+            score=score,
+            objective=objective,
+        )
+    except (OSError, json.JSONDecodeError, TypeError, ValueError):
+        return SaveSlotSummary(
+            slot=slot,
+            exists=False,
+            label=f"Slot {slot}",
+            difficulty="-",
+            level="-",
+            score="-",
+            objective="Corrupto",
+        )
+
+
+def list_save_slot_summaries() -> list[SaveSlotSummary]:
+    return [read_save_slot_summary(slot) for slot in range(1, SAVE_SLOT_COUNT + 1)]
+
+
+def build_save_slot_table(
+    summaries: list[SaveSlotSummary],
+    title: str,
+) -> Table:
+    table = Table(title=title, expand=True)
+    table.add_column("Slot")
+    table.add_column("Estado")
+    table.add_column("Dificultad")
+    table.add_column("Nivel")
+    table.add_column("Puntaje")
+    table.add_column("Objetivo")
+    for summary in summaries:
+        status = "Disponible" if summary.exists else "Vacío"
+        table.add_row(
+            summary.label,
+            status,
+            summary.difficulty.capitalize() if summary.difficulty != "-" else "-",
+            summary.level,
+            summary.score,
+            summary.objective,
+        )
+    return table
+
+
+def _prompt_main_menu_slot(existing_only: bool) -> int | None:
+    console = Console()
+    summaries = list_save_slot_summaries()
+    console.print(build_save_slot_table(summaries, "Slots de guardado"))
+    valid_slots = [
+        str(summary.slot)
+        for summary in summaries
+        if summary.exists or not existing_only
+    ]
+    if not valid_slots:
+        return None
+    selected = Prompt.ask(
+        "Selecciona slot",
+        choices=[*valid_slots, "salir"],
+        default=valid_slots[0],
+        show_choices=False,
+    )
+    if selected == "salir":
+        return None
+    return int(selected)
+
+
+def run() -> None:
+    summaries = list_save_slot_summaries()
+    console = Console()
+    console.print(build_save_slot_table(summaries, "Menú principal"))
+    available_actions = ["nueva", "salir"]
+    if any(summary.exists for summary in summaries):
+        available_actions.insert(0, "continuar")
+    action = Prompt.ask(
+        "Inicio",
+        choices=available_actions,
+        default=available_actions[0],
+        show_choices=False,
+    )
+    if action == "salir":
+        return
+    if action == "continuar":
+        slot = _prompt_main_menu_slot(existing_only=True)
+        if slot is None:
+            return
+        save_path = build_save_slot_path(slot)
+        app = BeastHunterApp(save_path=save_path, active_slot=slot)
+        if app.load_saved_game():
+            app.run()
+        return
+    slot = _prompt_main_menu_slot(existing_only=False)
+    if slot is None:
+        return
     selected_difficulty = Prompt.ask(
         "Elige dificultad",
         choices=[difficulty.value for difficulty in Difficulty],
@@ -1046,5 +1226,6 @@ def run() -> None:
     )
     BeastHunterApp(
         difficulty=Difficulty(selected_difficulty),
-        save_path=DEFAULT_SAVE_PATH,
+        save_path=build_save_slot_path(slot),
+        active_slot=slot,
     ).run()

@@ -1,7 +1,16 @@
 import random
 from pathlib import Path
 
-from game.app import BeastHunterApp, Difficulty
+from pytest import MonkeyPatch
+
+import game.app as app_module
+from game.app import (
+    DEFAULT_SAVE_PATH,
+    BeastHunterApp,
+    Difficulty,
+    build_save_slot_path,
+    list_save_slot_summaries,
+)
 from game.models import (
     Armor,
     Enemy,
@@ -258,3 +267,23 @@ def test_save_and_load_preserves_tutorial_state(tmp_path: Path) -> None:
     loaded_app.load_saved_game()
 
     assert loaded_app.session.tutorial_completed is True
+
+
+def test_build_save_slot_path_uses_default_file_for_first_slot() -> None:
+    assert build_save_slot_path(1) == DEFAULT_SAVE_PATH
+    assert build_save_slot_path(2).name == "savegame_slot_2.json"
+
+
+def test_list_save_slot_summaries_detects_existing_slot(
+    tmp_path: Path,
+    monkeypatch: MonkeyPatch,
+) -> None:
+    slot_path = tmp_path / "slot1.json"
+    monkeypatch.setattr(app_module, "DEFAULT_SAVE_PATH", slot_path)
+    app = BeastHunterApp(Difficulty.EXPLORADOR, save_path=slot_path, active_slot=1)
+    app.save_game()
+
+    summaries = list_save_slot_summaries()
+
+    assert len(summaries) == 3
+    assert summaries[0].exists is True
