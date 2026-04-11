@@ -21,6 +21,7 @@ from .models import (
     Trap,
     Weapon,
     calculate_damage,
+    calculate_enemy_damage,
 )
 from .world import ForestMap, Tile, ZoneType
 
@@ -69,6 +70,8 @@ class GameSession:
     world: ForestMap
     position: Position
     difficulty: Difficulty
+    boss_unlocked: bool = False
+    enemies_defeated: int = 0
     discovered_treasures: int = 0
     event_log: list[str] = field(default_factory=list)
     game_over: bool = False
@@ -111,6 +114,7 @@ class BeastHunterApp:
         session.log("Comienza la expedición en el corazón del bosque.")
         session.log("Tu misión inicial es sobrevivir, explorar y recolectar reliquias.")
         session.log(f"Dificultad activa: {config.label}.")
+        session.log("Explora el bosque y prepárate para derrotar a la Bestia Alfa.")
         return session
 
     def run(self) -> None:
@@ -151,7 +155,7 @@ class BeastHunterApp:
             Panel.fit(
                 "Cazador de Bestias del Bosque\n\n"
                 "Vertical slice profesional del proyecto: "
-                "exploración, combate, objetos y progreso.\n"
+                "exploración, combate, progresión y jefe final.\n"
                 "Comandos: n, s, e, o, atacar, defender, trampa, inventario, "
                 "equipar, tienda, descansar, salir",
                 title="Inicio de Partida",
@@ -179,6 +183,7 @@ class BeastHunterApp:
         table.add_column("Oro")
         table.add_column("Exploración")
         table.add_column("Dificultad")
+        table.add_column("Objetivo")
         table.add_row(
             hunter.name,
             f"{hunter.current_health}/{hunter.max_health}",
@@ -189,6 +194,7 @@ class BeastHunterApp:
             str(hunter.gold),
             f"{explored}/{total}",
             DIFFICULTY_CONFIG[self.session.difficulty].label,
+            self._objective_status(),
         )
         return table
 
@@ -205,6 +211,8 @@ class BeastHunterApp:
                     row.append("🧙")
                 elif not tile.explored:
                     row.append("·")
+                elif tile.zone_type is ZoneType.GUARIDA and tile.enemy and tile.enemy.is_alive():
+                    row.append("♛")
                 elif tile.shop_inventory or tile.rest_available:
                     row.append("⌂")
                 elif tile.enemy and tile.enemy.is_alive():
@@ -219,7 +227,9 @@ class BeastHunterApp:
     def _build_tile_panel(self) -> Panel:
         tile = self.session.world.tile_at(self.session.position)
         lines = [f"Zona actual: {tile.terrain_name}", f"Tipo de zona: {tile.zone_type.value}"]
-        if tile.enemy and tile.enemy.is_alive():
+        if tile.zone_type is ZoneType.GUARIDA and not self.session.boss_unlocked:
+            lines.append("Una barrera ancestral impide retar a la Bestia Alfa.")
+        elif tile.enemy and tile.enemy.is_alive():
             lines.append(
                 f"Enemigo: {tile.enemy.name} ({tile.enemy.enemy_type.value}) "
                 f"{tile.enemy.current_health}/{tile.enemy.max_health} PV"
@@ -255,6 +265,7 @@ class BeastHunterApp:
         }
         action = actions[command]
         action()
+        self._refresh_boss_unlock()
         self._check_victory()
 
     def _move(self, direction: Direction) -> None:
@@ -275,6 +286,13 @@ class BeastHunterApp:
             self.session.log("Llegas al campamento del gremio. Puedes comerciar y descansar.")
         elif tile.zone_type is ZoneType.PUESTO:
             self.session.log("Encuentras un puesto avanzado seguro entre la maleza.")
+        elif tile.zone_type is ZoneType.GUARIDA:
+            if self.session.boss_unlocked:
+                self.session.log("La guarida vibra. La Bestia Alfa te espera.")
+            else:
+                self.session.log(
+                    "La guarida permanece sellada. Debes explorar más y alcanzar nivel 3."
+                )
         if tile.item is not None:
             found_item = tile.item
             tile.item = None
@@ -309,6 +327,9 @@ class BeastHunterApp:
     def _attack(self) -> None:
         tile = self.session.world.tile_at(self.session.position)
         enemy = tile.enemy
+        if tile.zone_type is ZoneType.GUARIDA and not self.session.boss_unlocked:
+            self.session.log("La barrera ancestral rechaza tu ataque.")
+            return
         if enemy is None or not enemy.is_alive():
             self.session.log("No hay ningún enemigo que atacar aquí.")
             return
@@ -319,10 +340,7 @@ class BeastHunterApp:
         self.session.hunter.reset_guard()
 
         if not enemy.is_alive():
-            self.session.hunter.gold += enemy.reward_gold
-            for message in self.session.hunter.gain_experience(enemy.reward_experience):
-                self.session.log(message)
-            self.session.log(f"Derrotas a {enemy.name} y obtienes {enemy.reward_gold} monedas.")
+            self._resolve_enemy_defeat(enemy)
             return
 
         self._enemy_turn(enemy)
@@ -341,6 +359,9 @@ class BeastHunterApp:
     def _use_trap(self) -> None:
         tile = self.session.world.tile_at(self.session.position)
         enemy = tile.enemy
+        if tile.zone_type is ZoneType.GUARIDA and not self.session.boss_unlocked:
+            self.session.log("La barrera ancestral consume la explosión antes de llegar al jefe.")
+            return
         if enemy is None or not enemy.is_alive():
             self.session.log("No hay objetivo para usar una trampa.")
             return
@@ -353,18 +374,13 @@ class BeastHunterApp:
         if enemy.is_alive():
             self._enemy_turn(enemy)
             return
-        self.session.hunter.gold += enemy.reward_gold
-        for message in self.session.hunter.gain_experience(enemy.reward_experience):
-            self.session.log(message)
-        self.session.log(
-            f"La explosión elimina a {enemy.name}. "
-            f"Obtienes {enemy.reward_gold} monedas."
-        )
+        self.session.log(f"La explosión elimina a {enemy.name}.")
+        self._resolve_enemy_defeat(enemy)
 
     def _enemy_turn(self, enemy: Enemy) -> None:
-        enemy_damage = calculate_damage(enemy, self.session.hunter)
+        enemy_damage, action_text = calculate_enemy_damage(enemy, self.session.hunter)
         applied_to_hunter = self.session.hunter.receive_damage(enemy_damage)
-        self.session.log(f"{enemy.name} contraataca y te causa {applied_to_hunter} de daño.")
+        self.session.log(f"{enemy.name} {action_text} y te causa {applied_to_hunter} de daño.")
         self.session.hunter.reset_guard()
         if not self.session.hunter.is_alive():
             self.session.game_over = True
@@ -486,6 +502,40 @@ class BeastHunterApp:
         hunter.current_health = hunter.max_health
         self.session.log("Descansas junto al fuego y recuperas toda tu vitalidad.")
 
+    def _objective_status(self) -> str:
+        if self.session.victory:
+            return "Bestia Alfa derrotada"
+        if self.session.boss_unlocked:
+            return "Derrota a la Bestia Alfa"
+        return "Desbloquear guarida alfa"
+
+    def _boss_unlock_requirements_met(self) -> bool:
+        explored, total = self.session.world.exploration_progress()
+        required_tiles = max(1, int(total * 0.6))
+        return self.session.hunter.level >= 3 and explored >= required_tiles
+
+    def _refresh_boss_unlock(self) -> None:
+        if self.session.boss_unlocked or self.session.game_over:
+            return
+        if not self._boss_unlock_requirements_met():
+            return
+        self.session.boss_unlocked = True
+        boss_tile = self.session.world.boss_tile()
+        boss_tile.explored = True
+        self.session.log("La barrera ancestral de la guarida alfa se ha disipado.")
+        self.session.log("Ahora puedes desafiar a la Bestia Alfa en el extremo del bosque.")
+
+    def _resolve_enemy_defeat(self, enemy: Enemy) -> None:
+        self.session.enemies_defeated += 1
+        self.session.hunter.gold += enemy.reward_gold
+        for message in self.session.hunter.gain_experience(enemy.reward_experience):
+            self.session.log(message)
+        self.session.log(f"Derrotas a {enemy.name} y obtienes {enemy.reward_gold} monedas.")
+        if enemy.is_boss:
+            self.session.game_over = True
+            self.session.victory = True
+            self.session.log("La Bestia Alfa cae. El bosque vuelve a estar en calma.")
+
     def _print_item_selection(
         self,
         title: str,
@@ -548,13 +598,12 @@ class BeastHunterApp:
         self.session.log("Abandonas temporalmente la expedición.")
 
     def _check_victory(self) -> None:
-        explored, total = self.session.world.exploration_progress()
         if self.session.game_over:
             return
-        if explored == total and self.session.hunter.is_alive():
-            self.session.game_over = True
-            self.session.victory = True
-            self.session.log("Exploraste por completo el bosque y sobreviviste a la cacería.")
+        if self.session.boss_unlocked:
+            return
+        if self._boss_unlock_requirements_met():
+            self._refresh_boss_unlock()
 
 
 def run() -> None:

@@ -33,6 +33,7 @@ class ZoneType(StrEnum):
     BOSQUE = "bosque salvaje"
     CAMPAMENTO = "campamento"
     PUESTO = "puesto avanzado"
+    GUARIDA = "guarida ancestral"
 
 
 @dataclass(slots=True)
@@ -62,6 +63,7 @@ class ForestMap:
         self.enemy_health_bonus = enemy_health_bonus
         self.enemy_attack_bonus = enemy_attack_bonus
         self.start_position = Position(width // 2, height // 2)
+        self.boss_position = Position(width - 1, height - 1)
         self.tiles = self._generate_tiles()
 
     def _generate_tiles(self) -> dict[Position, Tile]:
@@ -85,6 +87,8 @@ class ForestMap:
         for position, tile in tiles.items():
             if position == self.start_position:
                 tile.explored = True
+                continue
+            if position == self.boss_position:
                 continue
             roll = self.rng.random()
             if roll < 0.48:
@@ -136,6 +140,21 @@ class ForestMap:
             reward_gold=blueprint.gold,
         )
 
+    def _create_boss(self) -> Enemy:
+        base_health = 58 + (self.enemy_health_bonus * 2)
+        base_attack = 15 + self.enemy_attack_bonus
+        return Enemy(
+            name="Bestia Alfa del Dosel",
+            max_health=base_health,
+            current_health=base_health,
+            base_attack=base_attack,
+            base_defense=6,
+            enemy_type=EnemyType.VOLADOR,
+            reward_experience=120,
+            reward_gold=90,
+            is_boss=True,
+        )
+
     def _create_item(self) -> Treasure | Trap | Weapon | Armor:
         item_factories: tuple[Callable[[], Treasure | Trap | Weapon | Armor], ...] = (
             lambda: Treasure(name="Colmillo raro", value=20),
@@ -160,7 +179,11 @@ class ForestMap:
         start_tile.enemy = None
         start_tile.item = None
 
-        outpost_candidates = [position for position in tiles if position != self.start_position]
+        outpost_candidates = [
+            position
+            for position in tiles
+            if position not in {self.start_position, self.boss_position}
+        ]
         outpost_position = self.rng.choice(outpost_candidates)
         outpost_tile = tiles[outpost_position]
         outpost_tile.terrain_name = "Puesto del guardabosques"
@@ -169,6 +192,14 @@ class ForestMap:
         outpost_tile.shop_inventory = self._create_shop_inventory()
         outpost_tile.enemy = None
         outpost_tile.item = None
+
+        boss_tile = tiles[self.boss_position]
+        boss_tile.terrain_name = "Guarida de la bestia alfa"
+        boss_tile.zone_type = ZoneType.GUARIDA
+        boss_tile.rest_available = False
+        boss_tile.shop_inventory = []
+        boss_tile.item = None
+        boss_tile.enemy = self._create_boss()
 
     def _create_shop_inventory(self) -> list[Item]:
         return [
@@ -181,6 +212,9 @@ class ForestMap:
 
     def tile_at(self, position: Position) -> Tile:
         return self.tiles[position]
+
+    def boss_tile(self) -> Tile:
+        return self.tiles[self.boss_position]
 
     def can_move(self, position: Position, direction: Direction) -> bool:
         target = self.move(position, direction)

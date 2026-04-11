@@ -1,6 +1,15 @@
 import random
 
-from game.models import Armor, Enemy, EnemyType, Hunter, Weapon, calculate_damage
+from game.app import BeastHunterApp, Difficulty
+from game.models import (
+    Armor,
+    Enemy,
+    EnemyType,
+    Hunter,
+    Weapon,
+    calculate_damage,
+    calculate_enemy_damage,
+)
 from game.world import ForestMap, ZoneType
 
 
@@ -44,11 +53,15 @@ def test_forest_map_marks_start_tile_as_explored() -> None:
     world = ForestMap(width=5, height=5, rng=random.Random(7))
 
     start_tile = world.tile_at(world.start_position)
+    boss_tile = world.boss_tile()
 
     assert start_tile.explored is True
     assert start_tile.zone_type is ZoneType.CAMPAMENTO
     assert start_tile.rest_available is True
     assert len(start_tile.shop_inventory) > 0
+    assert boss_tile.zone_type is ZoneType.GUARIDA
+    assert boss_tile.enemy is not None
+    assert boss_tile.enemy.is_boss is True
 
 
 def test_forest_map_progress_matches_grid_size() -> None:
@@ -98,3 +111,58 @@ def test_selling_equipped_item_removes_equipment_and_grants_gold() -> None:
     assert sale_price == 40
     assert hunter.gold == 40
     assert hunter.equipped_weapon is None
+
+
+def test_flying_enemies_ignore_part_of_defense() -> None:
+    hunter = Hunter(
+        name="Aren",
+        max_health=50,
+        current_health=50,
+        base_attack=8,
+        base_defense=8,
+    )
+    ground_enemy = Enemy(
+        name="Bestia terrestre",
+        max_health=40,
+        current_health=40,
+        base_attack=10,
+        base_defense=3,
+        enemy_type=EnemyType.TERRESTRE,
+    )
+    flying_enemy = Enemy(
+        name="Bestia voladora",
+        max_health=40,
+        current_health=40,
+        base_attack=10,
+        base_defense=3,
+        enemy_type=EnemyType.VOLADOR,
+    )
+
+    ground_damage, _ = calculate_enemy_damage(ground_enemy, hunter)
+    flying_damage, _ = calculate_enemy_damage(flying_enemy, hunter)
+
+    assert flying_damage > ground_damage
+
+
+def test_boss_unlock_requires_level_and_exploration() -> None:
+    app = BeastHunterApp(Difficulty.EXPLORADOR)
+    app.session.hunter.level = 3
+
+    for tile in app.session.world.tiles.values():
+        tile.explored = True
+
+    app._refresh_boss_unlock()
+
+    assert app.session.boss_unlocked is True
+
+
+def test_boss_defeat_ends_the_game_with_victory() -> None:
+    app = BeastHunterApp(Difficulty.EXPLORADOR)
+    boss = app.session.world.boss_tile().enemy
+
+    assert boss is not None
+
+    app._resolve_enemy_defeat(boss)
+
+    assert app.session.victory is True
+    assert app.session.game_over is True

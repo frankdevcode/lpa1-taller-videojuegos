@@ -84,6 +84,11 @@ class Character:
     def reset_guard(self) -> None:
         self.guard_bonus = 0
 
+    def health_ratio(self) -> float:
+        if self.max_health == 0:
+            return 0.0
+        return self.current_health / self.max_health
+
 
 @dataclass(slots=True)
 class Hunter(Character):
@@ -166,7 +171,30 @@ class Enemy(Character):
     enemy_type: EnemyType = EnemyType.TERRESTRE
     reward_experience: int = 0
     reward_gold: int = 0
+    is_boss: bool = False
 
 
 def calculate_damage(attacker: Character, defender: Character) -> int:
     return max(1, attacker.total_attack() - defender.total_defense())
+
+
+def calculate_enemy_damage(attacker: Enemy, defender: Character) -> tuple[int, str]:
+    attack_power = attacker.total_attack()
+    defense_power = defender.total_defense()
+    action_text = "contraataca"
+
+    if attacker.is_boss:
+        attack_power += 2
+        action_text = "golpea con una fuerza ancestral"
+        if attacker.health_ratio() <= 0.5:
+            attack_power += 3
+            defense_power = max(0, defense_power - 1)
+            action_text = "desata una furia ancestral"
+    elif attacker.enemy_type is EnemyType.VOLADOR:
+        defense_power = max(0, defense_power - 2)
+        action_text = "se lanza en picada"
+    elif attacker.health_ratio() <= 0.5:
+        attack_power += 2
+        action_text = "embiste con ferocidad"
+
+    return max(1, attack_power - defense_power), action_text
