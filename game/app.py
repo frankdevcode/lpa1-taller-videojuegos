@@ -18,6 +18,7 @@ from .models import (
     Direction,
     Enemy,
     EnemyType,
+    HealingItem,
     Hunter,
     Item,
     Position,
@@ -100,14 +101,15 @@ HELP_TOPICS = {
     "movimiento": "Usa n, s, e y o para explorar el bosque casilla por casilla.",
     "combate": "Usa atacar para dañar, defender para resistir y trampa para castigar enemigos.",
     "progreso": (
-        "Sube de nivel, explora el 60% del bosque y alcanza nivel 3 "
-        "para abrir la guarida alfa."
+        "Sube de nivel, explora el bosque y alcanza nivel 3 para abrir la guarida alfa."
     ),
     "comercio": (
         "Compra y vende en campamentos o puestos. "
         "Usa equipar para activar tu mejor equipo."
     ),
+    "consumibles": "Usa usar para consumir tónicos de curación cuando sea necesario.",
     "persistencia": "Usa guardar para almacenar la partida y cargar para restaurarla más adelante.",
+    "ranking": "Usa ranking para ver el top local de puntuaciones.",
 }
 
 
@@ -196,9 +198,11 @@ class BeastHunterApp:
                     "inventario",
                     "equipar",
                     "tienda",
+                    "usar",
                     "descansar",
                     "guardar",
                     "cargar",
+                    "ranking",
                     "tutorial",
                     "ayuda",
                     "salir",
@@ -233,7 +237,8 @@ class BeastHunterApp:
                 "Vertical slice profesional del proyecto: "
                 "exploración, combate, progresión y jefe final.\n"
                 "Comandos: n, s, e, o, atacar, defender, trampa, inventario, "
-                "equipar, tienda, descansar, guardar, cargar, tutorial, ayuda, salir",
+                "equipar, tienda, usar, descansar, guardar, cargar, ranking, "
+                "tutorial, ayuda, salir",
                 title="Inicio de Partida",
                 border_style="green",
             )
@@ -354,9 +359,11 @@ class BeastHunterApp:
             "inventario": self._show_inventory,
             "equipar": self._manage_equipment,
             "tienda": self._open_shop,
+            "usar": self._use_healing_item,
             "descansar": self._rest,
             "guardar": self._save_game,
             "cargar": self.load_game,
+            "ranking": self._show_leaderboard,
             "tutorial": self._run_tutorial,
             "ayuda": self._show_help,
             "salir": self._quit_game,
@@ -420,6 +427,13 @@ class BeastHunterApp:
                 f"Nueva defensa en inventario: {item.name}. Usa equipar para mejorar tu defensa."
             )
             return
+        if isinstance(item, HealingItem):
+            self._award_score(10, f"Aseguras {item.name}.")
+            self.session.log(
+                f"Consumible de curación listo: {item.name}. "
+                f"Restaura {item.heal_amount} PV al usar."
+            )
+            return
         self.session.discovered_treasures += 1
         self._award_score(item.value, f"Catalogas el tesoro {item.name}.")
         self._evaluate_achievements()
@@ -480,6 +494,20 @@ class BeastHunterApp:
             return
         self.session.log(f"La explosión elimina a {enemy.name}.")
         self._resolve_enemy_defeat(enemy)
+
+    def _use_healing_item(self) -> None:
+        hunter = self.session.hunter
+        healing_item = hunter.use_healing_item()
+        if healing_item is None:
+            self.session.log("No tienes consumibles de curación disponibles.")
+            return
+        recovered = hunter.heal(healing_item.heal_amount)
+        if recovered == 0:
+            self.session.log("Ya estás en plena forma. Guardas el consumible para más adelante.")
+            hunter.add_item(healing_item)
+            return
+        self._award_score(8, f"Te curas con {healing_item.name}.")
+        self.session.log(f"Recuperas {recovered} PV.")
 
     def _enemy_turn(self, enemy: Enemy) -> None:
         enemy_damage, action_text = calculate_enemy_damage(enemy, self.session.hunter)
@@ -643,6 +671,32 @@ class BeastHunterApp:
         self.console.print(table)
         self.session.log(f"Ayuda táctica: {self._context_hint()}")
 
+    def _show_leaderboard(self) -> None:
+        leaderboard = load_leaderboard(self.leaderboard_path)
+        if not leaderboard:
+            self.session.log("Todavía no hay registros en el ranking local.")
+            return
+        self.console.print(
+            build_leaderboard_table(
+                leaderboard[:10],
+                title="Ranking local - Top 10",
+            )
+        )
+        difficulty = self.session.difficulty.value
+        filtered = [
+            entry
+            for entry in leaderboard
+            if str(entry.get("difficulty", "")) == difficulty
+        ]
+        if filtered:
+            self.console.print(
+                build_leaderboard_table(
+                    filtered[:10],
+                    title=f"Ranking - {difficulty.capitalize()}",
+                )
+            )
+        self.session.log("Ranking mostrado.")
+
     def _context_hint(self) -> str:
         tile = self.session.world.tile_at(self.session.position)
         hunter = self.session.hunter
@@ -652,6 +706,11 @@ class BeastHunterApp:
             if hunter.trap_count() > 0:
                 return "Tienes trampas listas; son ideales para abrir el combate."
             if hunter.current_health <= max(12, hunter.max_health // 3):
+                if hunter.healing_item_count() > 0:
+                    return (
+                        "Tu vida es baja; usa un tónico de curación "
+                        "o retrocede a una zona segura."
+                    )
                 return "Tu vida es baja; considera defender o retroceder a una zona segura."
             return "Ataca para tomar la iniciativa o defiende si el enemigo te supera."
         if tile.rest_available and hunter.current_health < hunter.max_health:
@@ -675,8 +734,22 @@ class BeastHunterApp:
 
     def _boss_unlock_requirements_met(self) -> bool:
         explored, total = self.session.world.exploration_progress()
-        required_tiles = max(1, int(total * 0.6))
-        return self.session.hunter.level >= 3 and explored >= required_tiles
+        exploration_ratio = {
+            Difficulty.EXPLORADOR: 0.5,
+            Difficulty.CAZADOR: 0.6,
+            Difficulty.LEYENDA: 0.7,
+        }[self.session.difficulty]
+        required_tiles = max(1, int(total * exploration_ratio))
+        required_defeats = {
+            Difficulty.EXPLORADOR: 1,
+            Difficulty.CAZADOR: 2,
+            Difficulty.LEYENDA: 3,
+        }[self.session.difficulty]
+        return (
+            self.session.hunter.level >= 3
+            and explored >= required_tiles
+            and self.session.enemies_defeated >= required_defeats
+        )
 
     def _refresh_boss_unlock(self) -> None:
         if self.session.boss_unlocked or self.session.game_over:
@@ -898,7 +971,8 @@ class BeastHunterApp:
             tile.explored = bool(tile_data["explored"])
             tile.enemy = self._deserialize_enemy(tile_data["enemy"])
             tile_item = self._deserialize_item(tile_data["item"])
-            if isinstance(tile_item, (Treasure, Trap, Weapon, Armor)) or tile_item is None:
+            allowed_item_types = (Treasure, Trap, Weapon, Armor, HealingItem)
+            if isinstance(tile_item, allowed_item_types) or tile_item is None:
                 tile.item = tile_item
             tile.zone_type = ZoneType(str(tile_data["zone_type"]))
             tile.rest_available = bool(tile_data["rest_available"])
@@ -983,6 +1057,10 @@ class BeastHunterApp:
             payload["explosion_range"] = item.explosion_range
             payload["explosion_damage"] = item.explosion_damage
             return payload
+        if isinstance(item, HealingItem):
+            payload["kind"] = "healing"
+            payload["heal_amount"] = item.heal_amount
+            return payload
         payload["kind"] = "treasure"
         return payload
 
@@ -1008,6 +1086,12 @@ class BeastHunterApp:
                 value=int(data["value"]),
                 explosion_range=int(data["explosion_range"]),
                 explosion_damage=int(data["explosion_damage"]),
+            )
+        if kind == "healing":
+            return HealingItem(
+                name=str(data["name"]),
+                value=int(data["value"]),
+                heal_amount=int(data["heal_amount"]),
             )
         return Treasure(name=str(data["name"]), value=int(data["value"]))
 
@@ -1096,6 +1180,8 @@ class BeastHunterApp:
             return "Defensa"
         if isinstance(item, Trap):
             return "Trampa"
+        if isinstance(item, HealingItem):
+            return "Curación"
         return "Tesoro"
 
     def _item_effect(self, item: Item) -> str:
@@ -1105,6 +1191,8 @@ class BeastHunterApp:
             return f"+{item.defense_bonus} DEF"
         if isinstance(item, Trap):
             return f"{item.explosion_damage} daño"
+        if isinstance(item, HealingItem):
+            return f"+{item.heal_amount} PV"
         return "Valor de venta"
 
     def _quit_game(self) -> None:
@@ -1215,8 +1303,11 @@ def save_leaderboard(path: Path, entries: list[dict[str, Any]]) -> None:
     path.write_text(json.dumps(entries, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
-def build_leaderboard_table(entries: list[dict[str, Any]]) -> Table:
-    table = Table(title="Ranking local", expand=True)
+def build_leaderboard_table(
+    entries: list[dict[str, Any]],
+    title: str = "Ranking local",
+) -> Table:
+    table = Table(title=title, expand=True)
     table.add_column("#")
     table.add_column("Jugador")
     table.add_column("Dif.")

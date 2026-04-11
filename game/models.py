@@ -56,6 +56,11 @@ class Armor(Item):
 
 
 @dataclass(slots=True)
+class HealingItem(Item):
+    heal_amount: int
+
+
+@dataclass(slots=True)
 class Character:
     name: str
     max_health: int
@@ -77,6 +82,14 @@ class Character:
         applied_damage = min(self.current_health, max(1, damage))
         self.current_health -= applied_damage
         return applied_damage
+
+    def heal(self, amount: int) -> int:
+        if amount <= 0:
+            return 0
+        missing = self.max_health - self.current_health
+        applied = min(missing, amount)
+        self.current_health += applied
+        return applied
 
     def prepare_guard(self) -> None:
         self.guard_bonus = max(2, self.base_defense // 2)
@@ -163,6 +176,17 @@ class Hunter(Character):
                 trap = item
                 self.inventory.pop(index)
                 return trap
+        return None
+
+    def healing_item_count(self) -> int:
+        return sum(isinstance(item, HealingItem) for item in self.inventory)
+
+    def use_healing_item(self) -> HealingItem | None:
+        for index, item in enumerate(self.inventory):
+            if isinstance(item, HealingItem):
+                healing_item = item
+                self.inventory.pop(index)
+                return healing_item
         return None
 
 

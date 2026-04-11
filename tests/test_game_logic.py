@@ -17,6 +17,7 @@ from game.models import (
     Armor,
     Enemy,
     EnemyType,
+    HealingItem,
     Hunter,
     Weapon,
     calculate_damage,
@@ -159,6 +160,7 @@ def test_flying_enemies_ignore_part_of_defense() -> None:
 def test_boss_unlock_requires_level_and_exploration() -> None:
     app = BeastHunterApp(Difficulty.EXPLORADOR)
     app.session.hunter.level = 3
+    app.session.enemies_defeated = 1
 
     for tile in app.session.world.tiles.values():
         tile.explored = True
@@ -207,9 +209,11 @@ def test_save_and_load_restore_core_session_state(tmp_path: Path) -> None:
     save_path = tmp_path / "savegame.json"
     app = BeastHunterApp(Difficulty.EXPLORADOR, save_path=save_path)
     weapon = Weapon(name="Arco ritual", value=120, attack_bonus=9)
+    tonic = HealingItem(name="Tónico de hierbas", value=30, heal_amount=20)
 
     app.session.position = app.session.world.boss_position
     app.session.hunter.add_item(weapon)
+    app.session.hunter.add_item(tonic)
     app.session.hunter.equip_weapon(weapon)
     app.session.score = 240
     app.session.items_bought = 2
@@ -231,6 +235,7 @@ def test_save_and_load_restore_core_session_state(tmp_path: Path) -> None:
     assert loaded_app.session.achievements == ["Primera sangre", "Rastreador alfa"]
     assert loaded_app.session.hunter.equipped_weapon is not None
     assert loaded_app.session.hunter.equipped_weapon.name == "Arco ritual"
+    assert any(isinstance(item, HealingItem) for item in loaded_app.session.hunter.inventory)
 
 
 def test_load_saved_game_returns_false_when_file_does_not_exist(tmp_path: Path) -> None:
@@ -301,8 +306,34 @@ def test_leaderboard_persists_and_sorts_by_score(tmp_path: Path) -> None:
     save_leaderboard(lb_path, entries)
 
     loaded = load_leaderboard(lb_path)
-    loaded.sort(key=lambda e: (int(e.get("score", 0)), int(e.get("level", 0))), reverse=True)
+    loaded.sort(
+        key=lambda e: (
+            int(e.get("score", 0)),
+            int(e.get("level", 0)),
+        ),
+        reverse=True,
+    )
 
     assert loaded[0]["name"] == "B"
     assert loaded[1]["name"] == "C"
     assert loaded[2]["name"] == "A"
+
+
+def test_hunter_can_use_healing_items() -> None:
+    hunter = Hunter(
+        name="Aren",
+        max_health=50,
+        current_health=20,
+        base_attack=8,
+        base_defense=5,
+    )
+    tonic = HealingItem(name="Tónico de hierbas", value=30, heal_amount=20)
+    hunter.add_item(tonic)
+
+    consumed = hunter.use_healing_item()
+
+    assert consumed is not None
+    recovered = hunter.heal(consumed.heal_amount)
+    assert recovered == 20
+    assert hunter.current_health == 40
+    assert hunter.healing_item_count() == 0

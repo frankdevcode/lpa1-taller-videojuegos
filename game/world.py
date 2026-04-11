@@ -10,6 +10,7 @@ from .models import (
     Direction,
     Enemy,
     EnemyType,
+    HealingItem,
     Item,
     Position,
     Trap,
@@ -42,7 +43,7 @@ class Tile:
     terrain_name: str
     explored: bool = False
     enemy: Enemy | None = None
-    item: Treasure | Trap | Weapon | Armor | None = None
+    item: Treasure | Trap | Weapon | Armor | HealingItem | None = None
     zone_type: ZoneType = ZoneType.BOSQUE
     rest_available: bool = False
     shop_inventory: list[Item] = field(default_factory=list)
@@ -155,10 +156,14 @@ class ForestMap:
             is_boss=True,
         )
 
-    def _create_item(self) -> Treasure | Trap | Weapon | Armor:
-        item_factories: tuple[Callable[[], Treasure | Trap | Weapon | Armor], ...] = (
+    def _create_item(self) -> Treasure | Trap | Weapon | Armor | HealingItem:
+        item_factories: tuple[
+            Callable[[], Treasure | Trap | Weapon | Armor | HealingItem],
+            ...,
+        ] = (
             lambda: Treasure(name="Colmillo raro", value=20),
             lambda: Treasure(name="Amuleto del bosque", value=35),
+            lambda: HealingItem(name="Tónico de hierbas", value=30, heal_amount=20),
             lambda: Trap(
                 name="Trampa de raíces",
                 value=15,
@@ -207,6 +212,7 @@ class ForestMap:
             Weapon(name="Lanza pesada", value=95, attack_bonus=7),
             Armor(name="Armadura de cuero", value=70, defense_bonus=4),
             Armor(name="Manto del veterano", value=92, defense_bonus=6),
+            HealingItem(name="Tónico de hierbas", value=30, heal_amount=20),
             Trap(name="Carga de pólvora", value=40, explosion_range=2, explosion_damage=24),
         ]
 
