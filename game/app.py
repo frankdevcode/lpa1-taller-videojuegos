@@ -52,6 +52,7 @@ class DifficultyConfig:
     healing_multiplier: float
     boss_unlock_exploration_ratio: float
     boss_unlock_defeats_required: int
+    score_victory_target: int
 
 
 @dataclass(frozen=True, slots=True)
@@ -81,6 +82,7 @@ DIFFICULTY_CONFIG = {
         healing_multiplier=1.0,
         boss_unlock_exploration_ratio=0.5,
         boss_unlock_defeats_required=1,
+        score_victory_target=800,
     ),
     Difficulty.CAZADOR: DifficultyConfig(
         label="Cazador",
@@ -91,6 +93,7 @@ DIFFICULTY_CONFIG = {
         healing_multiplier=0.95,
         boss_unlock_exploration_ratio=0.6,
         boss_unlock_defeats_required=2,
+        score_victory_target=900,
     ),
     Difficulty.LEYENDA: DifficultyConfig(
         label="Leyenda",
@@ -101,6 +104,7 @@ DIFFICULTY_CONFIG = {
         healing_multiplier=0.9,
         boss_unlock_exploration_ratio=0.7,
         boss_unlock_defeats_required=3,
+        score_victory_target=1000,
     ),
 }
 
@@ -127,6 +131,7 @@ HELP_TOPICS = {
     "consumibles": "Usa usar para consumir tónicos de curación cuando sea necesario.",
     "persistencia": "Usa guardar para almacenar la partida y cargar para restaurarla más adelante.",
     "ranking": "Usa ranking para ver el top local de puntuaciones.",
+    "entorno": "Si un camino está bloqueado, usa esquivar para atravesar obstáculos del bosque.",
 }
 
 
@@ -222,6 +227,7 @@ class BeastHunterApp:
                     "ranking",
                     "tutorial",
                     "ayuda",
+                    "esquivar",
                     "salir",
                 ],
                 default="n",
@@ -255,7 +261,7 @@ class BeastHunterApp:
                 "exploración, combate, progresión y jefe final.\n"
                 "Comandos: n, s, e, o, atacar, defender, trampa, inventario, "
                 "equipar, tienda, usar, descansar, guardar, cargar, ranking, "
-                "tutorial, ayuda, salir",
+                "tutorial, ayuda, esquivar, salir",
                 title="Inicio de Partida",
                 border_style="green",
             )
@@ -316,6 +322,8 @@ class BeastHunterApp:
                     row.append("·")
                 elif tile.zone_type is ZoneType.GUARIDA and tile.enemy and tile.enemy.is_alive():
                     row.append("♛")
+                elif tile.obstacle:
+                    row.append("🌲")
                 elif tile.shop_inventory or tile.rest_available:
                     row.append("⌂")
                 elif tile.enemy and tile.enemy.is_alive():
@@ -332,6 +340,8 @@ class BeastHunterApp:
         lines = [f"Zona actual: {tile.terrain_name}", f"Tipo de zona: {tile.zone_type.value}"]
         if tile.zone_type is ZoneType.GUARIDA and not self.session.boss_unlocked:
             lines.append("Una barrera ancestral impide retar a la Bestia Alfa.")
+        elif tile.obstacle:
+            lines.append(f"Obstáculo: {tile.obstacle_name}.")
         elif tile.enemy and tile.enemy.is_alive():
             lines.append(
                 f"Enemigo: {tile.enemy.name} ({tile.enemy.enemy_type.value}) "
@@ -383,6 +393,7 @@ class BeastHunterApp:
             "ranking": self._show_leaderboard,
             "tutorial": self._run_tutorial,
             "ayuda": self._show_help,
+            "esquivar": self._dodge_prompt,
             "salir": self._quit_game,
         }
         action = actions[command]
@@ -394,14 +405,69 @@ class BeastHunterApp:
         if not self.session.world.can_move(self.session.position, direction):
             self.session.log("No puedes avanzar en esa dirección.")
             return
-        self.session.position = self.session.world.move(self.session.position, direction)
-        tile = self.session.world.tile_at(self.session.position)
+        target_position = self.session.world.move(self.session.position, direction)
+        tile = self.session.world.tile_at(target_position)
+        if tile.obstacle:
+            self.session.log(f"Un obstáculo bloquea el paso: {tile.obstacle_name}.")
+            self.session.log("Usa esquivar para intentar atravesarlo.")
+            return
+        self.session.position = target_position
         if not tile.explored:
             tile.explored = True
             self._award_score(10, f"Exploras {tile.terrain_name}.")
             self.session.log(f"Descubres {tile.terrain_name}.")
         else:
             self.session.log(f"Regresas a {tile.terrain_name}.")
+        self._resolve_tile(tile)
+
+    def _dodge_prompt(self) -> None:
+        direction_value = Prompt.ask(
+            "¿En qué dirección esquivas?",
+            choices=["n", "s", "e", "o", "salir"],
+            default="salir",
+            show_choices=False,
+        )
+        if direction_value == "salir":
+            self.session.log("Decides no arriesgarte a esquivar.")
+            return
+        direction = {
+            "n": Direction.NORTE,
+            "s": Direction.SUR,
+            "e": Direction.ESTE,
+            "o": Direction.OESTE,
+        }[direction_value]
+        self._dodge(direction)
+
+    def _dodge(self, direction: Direction) -> None:
+        if not self.session.world.can_move(self.session.position, direction):
+            self.session.log("No puedes esquivar en esa dirección.")
+            return
+        target_position = self.session.world.move(self.session.position, direction)
+        tile = self.session.world.tile_at(target_position)
+        if not tile.obstacle:
+            self.session.log("No hay ningún obstáculo que esquivar en esa dirección.")
+            return
+        chance = min(0.9, 0.55 + (self.session.hunter.level - 1) * 0.05)
+        roll = self.rng.random()
+        if roll > chance:
+            damage = 3
+            applied_damage = self.session.hunter.receive_damage(damage)
+            self.session.log("Intentas esquivar, pero fallas entre la maleza.")
+            self.session.log(f"Recibes {applied_damage} de daño al golpearte con el obstáculo.")
+            if not self.session.hunter.is_alive():
+                self.session.game_over = True
+                self.session.victory = False
+                self.session.log("Has caído durante la expedición.")
+                self._finalize_run()
+            return
+        tile.obstacle = False
+        tile.obstacle_name = ""
+        self.session.log("Esquivas con éxito y despejas el camino.")
+        self.session.position = target_position
+        if not tile.explored:
+            tile.explored = True
+            self._award_score(10, f"Exploras {tile.terrain_name}.")
+            self.session.log(f"Descubres {tile.terrain_name}.")
         self._resolve_tile(tile)
 
     def _resolve_tile(self, tile: Tile) -> None:
@@ -752,11 +818,14 @@ class BeastHunterApp:
         return "Tu siguiente meta es derrotar a la Bestia Alfa."
 
     def _objective_status(self) -> str:
-        if self.session.victory:
-            return "Bestia Alfa derrotada"
+        config = DIFFICULTY_CONFIG[self.session.difficulty]
+        explored, total = self.session.world.exploration_progress()
+        score_target = config.score_victory_target
+        if self.session.game_over and self.session.victory:
+            return "Victoria"
         if self.session.boss_unlocked:
-            return "Derrota a la Bestia Alfa"
-        return "Desbloquear guarida alfa"
+            return f"Jefe final | {self.session.score}/{score_target}"
+        return f"Explora {explored}/{total} | {self.session.score}/{score_target}"
 
     def _boss_unlock_requirements_met(self) -> bool:
         config = DIFFICULTY_CONFIG[self.session.difficulty]
@@ -935,6 +1004,8 @@ class BeastHunterApp:
                         "item": self._serialize_item(tile.item),
                         "zone_type": tile.zone_type.value,
                         "rest_available": tile.rest_available,
+                        "obstacle": tile.obstacle,
+                        "obstacle_name": tile.obstacle_name,
                         "shop_inventory": [
                             self._serialize_item(item) for item in tile.shop_inventory
                         ],
@@ -998,6 +1069,8 @@ class BeastHunterApp:
                 tile.item = tile_item
             tile.zone_type = ZoneType(str(tile_data["zone_type"]))
             tile.rest_available = bool(tile_data["rest_available"])
+            tile.obstacle = bool(tile_data.get("obstacle", False))
+            tile.obstacle_name = str(tile_data.get("obstacle_name", ""))
             tile.shop_inventory = [
                 item
                 for item in (
@@ -1225,10 +1298,19 @@ class BeastHunterApp:
     def _check_victory(self) -> None:
         if self.session.game_over:
             return
-        if self.session.boss_unlocked:
+        explored, total = self.session.world.exploration_progress()
+        if explored == total:
+            self.session.game_over = True
+            self.session.victory = True
+            self.session.log("Victoria por exploración: completaste el mapa del bosque.")
+            self._finalize_run()
             return
-        if self._boss_unlock_requirements_met():
-            self._refresh_boss_unlock()
+        config = DIFFICULTY_CONFIG[self.session.difficulty]
+        if self.session.score >= config.score_victory_target:
+            self.session.game_over = True
+            self.session.victory = True
+            self.session.log("Victoria por puntaje: alcanzaste el puntaje objetivo.")
+            self._finalize_run()
 
 
 def build_save_slot_path(slot: int) -> Path:

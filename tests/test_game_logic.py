@@ -6,6 +6,7 @@ from pytest import MonkeyPatch
 import game.app as app_module
 from game.app import (
     DEFAULT_SAVE_PATH,
+    DIFFICULTY_CONFIG,
     BeastHunterApp,
     Difficulty,
     build_save_slot_path,
@@ -15,10 +16,12 @@ from game.app import (
 )
 from game.models import (
     Armor,
+    Direction,
     Enemy,
     EnemyType,
     HealingItem,
     Hunter,
+    Position,
     Weapon,
     calculate_damage,
     calculate_enemy_damage,
@@ -239,6 +242,9 @@ def test_save_and_load_restore_core_session_state(tmp_path: Path) -> None:
     app = BeastHunterApp(Difficulty.EXPLORADOR, save_path=save_path)
     weapon = Weapon(name="Arco ritual", value=120, attack_bonus=9)
     tonic = HealingItem(name="Tónico de hierbas", value=30, heal_amount=20)
+    blocked_tile = app.session.world.tile_at(Position(0, 0))
+    blocked_tile.obstacle = True
+    blocked_tile.obstacle_name = "árbol caído"
 
     app.session.position = app.session.world.boss_position
     app.session.hunter.add_item(weapon)
@@ -265,6 +271,9 @@ def test_save_and_load_restore_core_session_state(tmp_path: Path) -> None:
     assert loaded_app.session.hunter.equipped_weapon is not None
     assert loaded_app.session.hunter.equipped_weapon.name == "Arco ritual"
     assert any(isinstance(item, HealingItem) for item in loaded_app.session.hunter.inventory)
+    loaded_blocked = loaded_app.session.world.tile_at(Position(0, 0))
+    assert loaded_blocked.obstacle is True
+    assert loaded_blocked.obstacle_name == "árbol caído"
 
 
 def test_load_saved_game_returns_false_when_file_does_not_exist(tmp_path: Path) -> None:
@@ -366,3 +375,42 @@ def test_hunter_can_use_healing_items() -> None:
     assert recovered == 20
     assert hunter.current_health == 40
     assert hunter.healing_item_count() == 0
+
+
+def test_obstacle_blocks_move_and_dodge_can_clear(monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
+    app = BeastHunterApp(Difficulty.EXPLORADOR, leaderboard_path=tmp_path / "leaderboard.json")
+    start = app.session.position
+    target = app.session.world.move(start, Direction.ESTE)
+    tile = app.session.world.tile_at(target)
+    tile.obstacle = True
+    tile.obstacle_name = "zarzas densas"
+
+    app._move(Direction.ESTE)
+
+    assert app.session.position == start
+    monkeypatch.setattr(app.rng, "random", lambda: 0.0)
+    app._dodge(Direction.ESTE)
+    assert app.session.position == target
+    assert tile.obstacle is False
+
+
+def test_victory_by_exploration_completes_game(tmp_path: Path) -> None:
+    app = BeastHunterApp(Difficulty.EXPLORADOR, leaderboard_path=tmp_path / "leaderboard.json")
+    for tile in app.session.world.tiles.values():
+        tile.explored = True
+
+    app._check_victory()
+
+    assert app.session.game_over is True
+    assert app.session.victory is True
+
+
+def test_victory_by_score_completes_game(tmp_path: Path) -> None:
+    app = BeastHunterApp(Difficulty.CAZADOR, leaderboard_path=tmp_path / "leaderboard.json")
+    target = DIFFICULTY_CONFIG[app.session.difficulty].score_victory_target
+    app.session.score = target
+
+    app._check_victory()
+
+    assert app.session.game_over is True
+    assert app.session.victory is True

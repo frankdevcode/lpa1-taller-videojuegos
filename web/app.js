@@ -1,5 +1,6 @@
 const state = {
   view: null,
+  lastMoveDirection: null,
   player: {
     from: null,
     to: null,
@@ -68,6 +69,9 @@ function renderStatus(view) {
 
 function renderTile(view) {
   const t = view.tile;
+  const obstacle = t.obstacle
+    ? `<span>Obstáculo: ${escapeHtml(t.obstacle_name || "bloqueo")}.</span>`
+    : "";
   const enemy = t.enemy
     ? `<span>Enemigo: ${escapeHtml(t.enemy.name)} (${escapeHtml(t.enemy.type)}) ${t.enemy.hp}/${t.enemy.max_hp}</span>`
     : `<span>Sin enemigo.</span>`;
@@ -80,6 +84,7 @@ function renderTile(view) {
         <div>
           <strong>${escapeHtml(t.terrain)}</strong>
           <span>Zona: ${escapeHtml(t.zone_type)}</span>
+          ${obstacle}
           ${enemy}
           ${item}
           <span>Descanso: ${t.rest_available ? "sí" : "no"} · Tienda: ${t.shop_available ? "sí" : "no"}</span>
@@ -133,7 +138,7 @@ function renderMap(view) {
 }
 
 function tileOverlay(symbol) {
-  if (symbol === "⚔" || symbol === "♛" || symbol === "⌂" || symbol === "✦") {
+  if (symbol === "⚔" || symbol === "♛" || symbol === "⌂" || symbol === "✦" || symbol === "🌲") {
     return symbol;
   }
   return "";
@@ -380,6 +385,14 @@ async function setup() {
       await doAction({ type: action, index: Number(target.dataset.index) });
       return;
     }
+    if (action === "dodge") {
+      if (!state.lastMoveDirection) {
+        showModal("Esquivar", "<p>Mueve primero en una dirección (WASD/flechas) para esquivar.</p>");
+        return;
+      }
+      await doAction({ type: "dodge", direction: state.lastMoveDirection });
+      return;
+    }
     await doAction({ type: action });
   });
 
@@ -396,22 +409,35 @@ function setupKeyboardControls() {
     const key = event.key.toLowerCase();
     if (key === "arrowup" || key === "w") {
       event.preventDefault();
+      state.lastMoveDirection = "n";
       await doAction({ type: "move", direction: "n" });
       return;
     }
     if (key === "arrowdown" || key === "s") {
       event.preventDefault();
+      state.lastMoveDirection = "s";
       await doAction({ type: "move", direction: "s" });
       return;
     }
     if (key === "arrowleft" || key === "a") {
       event.preventDefault();
+      state.lastMoveDirection = "o";
       await doAction({ type: "move", direction: "o" });
       return;
     }
     if (key === "arrowright" || key === "d") {
       event.preventDefault();
+      state.lastMoveDirection = "e";
       await doAction({ type: "move", direction: "e" });
+      return;
+    }
+    if (event.code === "Space") {
+      event.preventDefault();
+      if (!state.lastMoveDirection) {
+        showModal("Esquivar", "<p>Mueve primero en una dirección (WASD/flechas) para esquivar.</p>");
+        return;
+      }
+      await doAction({ type: "dodge", direction: state.lastMoveDirection });
       return;
     }
     if (key === "enter") {
@@ -462,6 +488,12 @@ function setupCanvasClickMove() {
       return;
     }
     const direction = dx === 1 ? "e" : dx === -1 ? "o" : dy === 1 ? "s" : "n";
+    state.lastMoveDirection = direction;
+    const symbol = state.view.map.grid[gridY][gridX];
+    if (symbol === "🌲") {
+      await doAction({ type: "dodge", direction });
+      return;
+    }
     await doAction({ type: "move", direction });
   });
 }

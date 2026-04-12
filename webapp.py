@@ -103,6 +103,8 @@ def build_map_symbol(game: BeastHunterApp, position: Position) -> str:
         return "·"
     if tile.zone_type is ZoneType.GUARIDA and tile.enemy and tile.enemy.is_alive():
         return "♛"
+    if tile.obstacle:
+        return "🌲"
     if tile.shop_inventory or tile.rest_available:
         return "⌂"
     if tile.enemy and tile.enemy.is_alive():
@@ -177,6 +179,8 @@ def build_view(game: BeastHunterApp) -> dict[str, Any]:
             "zone_type": tile.zone_type.value,
             "rest_available": tile.rest_available,
             "shop_available": bool(tile.shop_inventory),
+            "obstacle": tile.obstacle,
+            "obstacle_name": tile.obstacle_name,
             "enemy": enemy_payload,
             "item": item_payload,
         },
@@ -314,6 +318,9 @@ def action(
         game._use_trap()
     elif action_type == "use":
         game._use_healing_item()
+    elif action_type == "dodge":
+        direction_value = body.get("direction", "")
+        game._dodge(parse_direction(direction_value))
     elif action_type == "rest":
         game._rest()
     elif action_type == "equip":

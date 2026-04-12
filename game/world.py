@@ -47,6 +47,8 @@ class Tile:
     zone_type: ZoneType = ZoneType.BOSQUE
     rest_available: bool = False
     shop_inventory: list[Item] = field(default_factory=list)
+    obstacle: bool = False
+    obstacle_name: str = ""
 
 
 class ForestMap:
@@ -90,6 +92,13 @@ class ForestMap:
                 tile.explored = True
                 continue
             if position == self.boss_position:
+                continue
+            obstacle_roll = self.rng.random()
+            if obstacle_roll < 0.14:
+                tile.obstacle = True
+                tile.obstacle_name = self.rng.choice(
+                    ["árbol caído", "zarzas densas", "rocas húmedas"]
+                )
                 continue
             roll = self.rng.random()
             if roll < 0.48:
@@ -183,6 +192,8 @@ class ForestMap:
         start_tile.shop_inventory = self._create_shop_inventory()
         start_tile.enemy = None
         start_tile.item = None
+        start_tile.obstacle = False
+        start_tile.obstacle_name = ""
 
         outpost_candidates = [
             position
@@ -197,6 +208,8 @@ class ForestMap:
         outpost_tile.shop_inventory = self._create_shop_inventory()
         outpost_tile.enemy = None
         outpost_tile.item = None
+        outpost_tile.obstacle = False
+        outpost_tile.obstacle_name = ""
 
         boss_tile = tiles[self.boss_position]
         boss_tile.terrain_name = "Guarida de la bestia alfa"
@@ -205,6 +218,8 @@ class ForestMap:
         boss_tile.shop_inventory = []
         boss_tile.item = None
         boss_tile.enemy = self._create_boss()
+        boss_tile.obstacle = False
+        boss_tile.obstacle_name = ""
 
     def _create_shop_inventory(self) -> list[Item]:
         return [
