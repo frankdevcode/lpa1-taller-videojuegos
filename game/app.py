@@ -165,12 +165,14 @@ class BeastHunterApp:
         save_path: Path = DEFAULT_SAVE_PATH,
         active_slot: int | None = None,
         leaderboard_path: Path = DEFAULT_LEADERBOARD_PATH,
+        world_size: int = 5,
     ) -> None:
         self.console = Console()
         self.rng = random.Random()
         self.save_path = save_path
         self.active_slot = active_slot
         self.leaderboard_path = leaderboard_path
+        self.world_size = max(5, world_size)
         self.session = self._create_session(difficulty)
 
     def _create_session(self, difficulty: Difficulty) -> GameSession:
@@ -184,8 +186,8 @@ class BeastHunterApp:
             gold=config.starting_gold,
         )
         world = ForestMap(
-            width=5,
-            height=5,
+            width=self.world_size,
+            height=self.world_size,
             rng=self.rng,
             enemy_health_bonus=config.enemy_health_bonus,
             enemy_attack_bonus=config.enemy_attack_bonus,

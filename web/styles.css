@@ -69,6 +69,10 @@ button:hover {
   padding: 16px;
 }
 
+.panel-map {
+  grid-column: span 2;
+}
+
 .panel {
   border: 1px solid #1c2440;
   border-radius: 12px;
@@ -105,6 +109,7 @@ button:hover {
 
 .game-canvas {
   width: 100%;
+  min-height: 420px;
   height: auto;
   border: 1px solid #24305b;
   background: #071027;
@@ -199,4 +204,24 @@ button:hover {
 .modal-body {
   padding: 14px;
   color: #d5defa;
+}
+
+@media (max-width: 1400px) {
+  .layout {
+    grid-template-columns: repeat(2, minmax(260px, 1fr));
+  }
+
+  .panel-map {
+    grid-column: span 2;
+  }
+}
+
+@media (max-width: 900px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .panel-map {
+    grid-column: span 1;
+  }
 }

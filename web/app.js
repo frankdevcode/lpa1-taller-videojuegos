@@ -1,11 +1,16 @@
 const state = {
   view: null,
   lastMoveDirection: null,
+  camera: {
+    x: 0,
+    y: 0,
+    ready: false,
+  },
   player: {
     from: null,
     to: null,
     startedAt: 0,
-    durationMs: 140,
+    durationMs: 180,
   },
 };
 
@@ -104,37 +109,63 @@ function renderMap(view) {
   }
 
   const { width, height, grid } = view.map;
-  const cellSize = Math.floor(Math.min(canvas.width / width, canvas.height / height));
-  const offsetX = Math.floor((canvas.width - cellSize * width) / 2);
-  const offsetY = Math.floor((canvas.height - cellSize * height) / 2);
+  const tileSize = 72;
+  const playerPos = getAnimatedPlayerPosition(view);
+  const camera = updateCamera(playerPos.x, playerPos.y);
+  const halfTilesX = Math.ceil(canvas.width / (tileSize * 2)) + 2;
+  const halfTilesY = Math.ceil(canvas.height / (tileSize * 2)) + 2;
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const background = ctx.createLinearGradient(0, 0, 0, canvas.height);
+  background.addColorStop(0, "#061026");
+  background.addColorStop(1, "#040815");
+  ctx.fillStyle = background;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  for (let y = 0; y < height; y += 1) {
-    for (let x = 0; x < width; x += 1) {
+  const startX = Math.max(0, Math.floor(camera.x) - halfTilesX);
+  const endX = Math.min(width - 1, Math.floor(camera.x) + halfTilesX);
+  const startY = Math.max(0, Math.floor(camera.y) - halfTilesY);
+  const endY = Math.min(height - 1, Math.floor(camera.y) + halfTilesY);
+
+  for (let y = startY; y <= endY; y += 1) {
+    for (let x = startX; x <= endX; x += 1) {
       const symbol = grid[y][x];
-      const rectX = offsetX + x * cellSize;
-      const rectY = offsetY + y * cellSize;
+      const rectX = Math.round((x - camera.x) * tileSize + canvas.width / 2);
+      const rectY = Math.round((y - camera.y) * tileSize + canvas.height / 2);
 
       const baseColor = tileBaseColor(symbol, x, y);
       ctx.fillStyle = baseColor;
-      ctx.fillRect(rectX, rectY, cellSize, cellSize);
+      ctx.fillRect(rectX, rectY, tileSize, tileSize);
 
-      ctx.strokeStyle = "rgba(38,49,90,0.9)";
-      ctx.strokeRect(rectX + 0.5, rectY + 0.5, cellSize - 1, cellSize - 1);
+      if (symbol === "✓" || symbol === "·") {
+        drawGrassPattern(ctx, rectX, rectY, tileSize, x, y);
+      }
+
+      ctx.strokeStyle = "rgba(38,49,90,0.55)";
+      ctx.strokeRect(rectX + 0.5, rectY + 0.5, tileSize - 1, tileSize - 1);
 
       const overlay = tileOverlay(symbol);
       if (overlay) {
-        ctx.font = `${Math.floor(cellSize * 0.6)}px system-ui`;
+        ctx.font = `${Math.floor(tileSize * 0.48)}px system-ui`;
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
         ctx.fillStyle = "rgba(232,238,252,0.95)";
-        ctx.fillText(overlay, rectX + cellSize / 2, rectY + cellSize / 2);
+        ctx.fillText(overlay, rectX + tileSize / 2, rectY + tileSize / 2);
       }
     }
   }
 
-  drawPlayer(ctx, view, cellSize, offsetX, offsetY);
+  drawPlayer(ctx, canvas, playerPos, camera, tileSize);
+
+  const isMoving =
+    Math.abs(playerPos.x - view.status.position.x) > 0.001 ||
+    Math.abs(playerPos.y - view.status.position.y) > 0.001;
+  const cameraLag =
+    Math.abs(camera.x - playerPos.x) > 0.001 ||
+    Math.abs(camera.y - playerPos.y) > 0.001;
+  if (isMoving || cameraLag) {
+    requestAnimationFrame(() => renderMap(state.view));
+  }
 }
 
 function tileOverlay(symbol) {
@@ -146,7 +177,7 @@ function tileOverlay(symbol) {
 
 function tileBaseColor(symbol, x, y) {
   if (symbol === "·") {
-    return "#071027";
+    return "#050b1b";
   }
   if (symbol === "⌂") {
     return "#131d3f";
@@ -159,6 +190,9 @@ function tileBaseColor(symbol, x, y) {
   }
   if (symbol === "✦") {
     return "#111f2e";
+  }
+  if (symbol === "🌲") {
+    return "#102518";
   }
   if (symbol === "✓") {
     return grassColor(x, y);
@@ -180,11 +214,24 @@ function pseudoNoise(x, y) {
   return seed / 233280;
 }
 
-function drawPlayer(ctx, view, cellSize, offsetX, offsetY) {
-  const pos = view.status.position;
-  if (!pos) {
-    return;
+function drawGrassPattern(ctx, rectX, rectY, tileSize, x, y) {
+  const n = pseudoNoise(x + 7, y + 13);
+  const lines = 2 + Math.floor(n * 4);
+  ctx.strokeStyle = "rgba(100,170,110,0.14)";
+  ctx.lineWidth = 1;
+  for (let i = 0; i < lines; i += 1) {
+    const px = rectX + ((i + 1) / (lines + 1)) * tileSize;
+    const py = rectY + tileSize - 5 - (i % 3);
+    ctx.beginPath();
+    ctx.moveTo(px, py);
+    ctx.lineTo(px + 2, py - 8);
+    ctx.stroke();
   }
+}
+
+function getAnimatedPlayerPosition(view) {
+  const pos = view.status.position;
+  if (!pos) return { x: 0, y: 0 };
   const target = { x: pos.x, y: pos.y };
   const now = performance.now();
   const tween = state.player;
@@ -199,27 +246,49 @@ function drawPlayer(ctx, view, cellSize, offsetX, offsetY) {
   const eased = easeOutCubic(progress);
   const from = tween.from ?? target;
   const to = tween.to ?? target;
-  const drawX = from.x + (to.x - from.x) * eased;
-  const drawY = from.y + (to.y - from.y) * eased;
+  return {
+    x: from.x + (to.x - from.x) * eased,
+    y: from.y + (to.y - from.y) * eased,
+  };
+}
 
-  const centerX = offsetX + drawX * cellSize + cellSize / 2;
-  const centerY = offsetY + drawY * cellSize + cellSize / 2;
-  const radius = Math.max(6, Math.floor(cellSize * 0.22));
+function updateCamera(targetX, targetY) {
+  if (!state.camera.ready) {
+    state.camera.x = targetX;
+    state.camera.y = targetY;
+    state.camera.ready = true;
+  }
+  const lerp = 0.22;
+  state.camera.x += (targetX - state.camera.x) * lerp;
+  state.camera.y += (targetY - state.camera.y) * lerp;
+  return state.camera;
+}
+
+function drawPlayer(ctx, canvas, playerPos, camera, tileSize) {
+  const centerX = (playerPos.x - camera.x) * tileSize + canvas.width / 2 + tileSize / 2;
+  const centerY = (playerPos.y - camera.y) * tileSize + canvas.height / 2 + tileSize / 2;
+  const radius = Math.max(8, Math.floor(tileSize * 0.24));
 
   ctx.beginPath();
-  ctx.fillStyle = "#ffce6b";
-  ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+  ctx.fillStyle = "rgba(0,0,0,0.28)";
+  ctx.ellipse(centerX, centerY + radius + 5, radius * 0.9, radius * 0.35, 0, 0, Math.PI * 2);
   ctx.fill();
 
   ctx.beginPath();
-  ctx.strokeStyle = "rgba(10,15,30,0.9)";
-  ctx.lineWidth = 2;
-  ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
-  ctx.stroke();
+  ctx.fillStyle = "#ffce6b";
+  ctx.arc(centerX, centerY - radius * 0.2, radius, 0, Math.PI * 2);
+  ctx.fill();
 
-  if (progress < 1) {
-    requestAnimationFrame(() => renderMap(state.view));
-  }
+  ctx.beginPath();
+  ctx.fillStyle = "#3d5a9a";
+  ctx.arc(centerX, centerY + radius * 0.7, radius * 0.75, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.strokeStyle = "rgba(8,12,24,0.92)";
+  ctx.lineWidth = 2.2;
+  ctx.arc(centerX, centerY - radius * 0.2, radius, 0, Math.PI * 2);
+  ctx.stroke();
 }
 
 function easeOutCubic(t) {
@@ -473,11 +542,11 @@ function setupCanvasClickMove() {
     const x = (event.clientX - rect.left) * (canvas.width / rect.width);
     const y = (event.clientY - rect.top) * (canvas.height / rect.height);
     const { width, height } = state.view.map;
-    const cellSize = Math.floor(Math.min(canvas.width / width, canvas.height / height));
-    const offsetX = Math.floor((canvas.width - cellSize * width) / 2);
-    const offsetY = Math.floor((canvas.height - cellSize * height) / 2);
-    const gridX = Math.floor((x - offsetX) / cellSize);
-    const gridY = Math.floor((y - offsetY) / cellSize);
+    const tileSize = 72;
+    const camX = state.camera.ready ? state.camera.x : state.view.status.position.x;
+    const camY = state.camera.ready ? state.camera.y : state.view.status.position.y;
+    const gridX = Math.floor((x - canvas.width / 2) / tileSize + camX);
+    const gridY = Math.floor((y - canvas.height / 2) / tileSize + camY);
     if (gridX < 0 || gridX >= width || gridY < 0 || gridY >= height) {
       return;
     }

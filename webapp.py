@@ -57,6 +57,7 @@ def get_or_create_session(sid: str | None) -> tuple[str, BeastHunterApp]:
         save_path=DEFAULT_SAVE_PATH,
         active_slot=1,
         leaderboard_path=DEFAULT_LEADERBOARD_PATH,
+        world_size=31,
     )
     SESSIONS[session_id] = game
     return session_id, game
@@ -268,6 +269,7 @@ def new_game(
         save_path=save_path,
         active_slot=slot,
         leaderboard_path=DEFAULT_LEADERBOARD_PATH,
+        world_size=31,
     )
     session_id = create_session_id()
     SESSIONS[session_id] = game
@@ -288,6 +290,7 @@ def load_game(
         save_path=save_path,
         active_slot=slot,
         leaderboard_path=DEFAULT_LEADERBOARD_PATH,
+        world_size=31,
     )
     if not game.load_saved_game():
         raise HTTPException(status_code=404, detail="No existe guardado en ese slot")
